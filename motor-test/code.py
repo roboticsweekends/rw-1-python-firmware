@@ -5,7 +5,7 @@ Minimal RW-1 differential-drive motor wiring check — two motors
 The program runs on power on (put the robot on blocks first):
   2 s idle -> move forward at 20% for 4 s   (straight)
   2 s idle -> turn right backward at 15% for 3 s  (spins clockwise)
-  move forward at 20% for 4 s   (straight) -> turn right at 40% for 3 s
+  move forward at 20% for 4 s   (straight) -> turn right at 15% for 3 s
 
 To run: copy this file to the CIRCUITPY drive. If a wheel spins the
 wrong way, swap that motor's two leads or its FWD/BWD pins below.

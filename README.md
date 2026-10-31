@@ -17,10 +17,10 @@ latest firmware.
 
 ## Repository layout
 
-| Folder | Guide | What it contains |
-|---|---|---|
-| [`guide-3_motor-test/`](guide-3_motor-test/) | 3 | Motor wiring check: drives both wheels open loop, no encoders |
-| [`guide-5_closed-loop/`](guide-5_closed-loop/) | 5 | Encoder check, calibration scripts and closed-loop (feedforward + PI) wheel speed control |
+| Folder | Guide | What it contains |Post|
+|---|---|---|---|
+| [`guide-3_motor-test/`](guide-3_motor-test/) | 3 | Motor wiring check: drives both wheels open loop, no encoders | [Link](https://www.patreon.com/RoboticsWeekends/posts/3-rw-1-robot-172695270) |
+| [`guide-5_closed-loop/`](guide-5_closed-loop/) | 5 | Encoder check, calibration scripts and closed-loop (feedforward + PI) wheel speed control | [Link](https://www.patreon.com/RoboticsWeekends/posts) |
 | [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-5_closed-loop/` |
 
 - `guide-N_<topic>/` folders hold the code developed in guide N. They are

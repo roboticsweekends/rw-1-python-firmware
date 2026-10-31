@@ -16,7 +16,8 @@ class EncoderReader:
     :param pin_right_b: Right encoder channel B.
     :param int ticks_per_rev: Encoder counts per wheel revolution.
     :param float smoothing: 0 = raw speed, closer to 1 = smoother but slower to react.
-    :param int divisor: Counts per encoder pulse cycle (see ``rotaryio.IncrementalEncoder``).
+    :param int divisor: Encoder edges per count; 1 counts all four edges of each pulse cycle
+        (see ``rotaryio.IncrementalEncoder``).
     """
 
     def __init__(

@@ -19,7 +19,7 @@ from pid import PID
 
 MODE = "pi"
 CONTROL_PERIOD_NS = 20_000_000   # 20 ms (50 Hz control loop), in nanoseconds
-PRINT_EVERY = 2                  # print every 2nd loop (every 40 ms)
+PRINT_EVERY = 1                  # print every loop (every 20 ms)
 NS_PER_S = 1_000_000_000
 
 # (duration in seconds, left target RPM, right target RPM)

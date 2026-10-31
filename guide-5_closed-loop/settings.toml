@@ -2,7 +2,7 @@
 # Float values MUST be quoted; CircuitPython only supports strings and ints here.
 
 # Encoder: counts per wheel revolution with the divisor below
-ROBOT_ENCODER_DIVISOR=2
+ROBOT_ENCODER_DIVISOR=1
 ROBOT_TICKS_PER_REV=1920
 
 # Wheel RPM at full PWM (from pwm_to_speed.py)

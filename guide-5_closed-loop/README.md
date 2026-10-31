@@ -9,7 +9,7 @@ controller (feedforward + PI, 50 Hz) that makes each wheel hold a target RPM.
 
 | File | Purpose |
 |---|---|
-| `code.py` | Speed control demo: follows a profile of left/right target RPM steps and prints target and measured speed for Thonny's Plotter. `MODE` selects `"open"`, `"p"` or `"pi"` |
+| `code.py` | Speed control demo: follows a profile of left/right target RPM steps and prints target and measured speed every 20 ms for Thonny's Plotter. `MODE` selects `"open"`, `"p"` or `"pi"` |
 | `check_encoders.py` | Step 1: checks that both encoders count, and count up when the wheel turns forward |
 | `measure_ticks.py` | Step 2: measures encoder counts per wheel revolution (`ROBOT_TICKS_PER_REV`) |
 | `pwm_to_speed.py` | Step 3: measures RPM against PWM and suggests `ROBOT_MAX_RPM`, `ROBOT_FF_LEFT`, `ROBOT_FF_RIGHT` |

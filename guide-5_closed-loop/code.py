@@ -19,7 +19,7 @@ from pid import PID
 
 MODE = "pi"
 CONTROL_PERIOD_NS = 20_000_000   # 20 ms (50 Hz control loop), in nanoseconds
-PRINT_EVERY = 5                  # print every 5th loop (every 100 ms)
+PRINT_EVERY = 1                  # print every loop (every 20 ms)
 NS_PER_S = 1_000_000_000
 
 # Robot's path. 

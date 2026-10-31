@@ -14,7 +14,7 @@ import os
 _FIELDS = (
     ("ROBOT_MAX_RPM",         "max_rpm",         200.0,  float),  # wheel RPM at full PWM
     ("ROBOT_TICKS_PER_REV",   "ticks_per_rev",   1920,   int),    # counts per wheel revolution
-    ("ROBOT_ENCODER_DIVISOR", "encoder_divisor", 2,      int),    # rotaryio divisor
+    ("ROBOT_ENCODER_DIVISOR", "encoder_divisor", 1,      int),    # rotaryio divisor
     ("ROBOT_FF_LEFT",         "ff_left",         1.0,    float),  # feedforward correction, left motor
     ("ROBOT_FF_RIGHT",        "ff_right",        1.0,    float),  # feedforward correction, right motor
     ("ROBOT_PID_KP",          "pid_kp",          0.9,    float),

@@ -1,0 +1,17 @@
+# RW-1 robot configuration, read by lib/config.py on boot.
+# Float values MUST be quoted; CircuitPython only supports strings and ints here.
+
+# Encoder: counts per wheel revolution with the divisor below
+ROBOT_ENCODER_DIVISOR=1
+ROBOT_TICKS_PER_REV=1920
+
+# Wheel RPM at full PWM (from pwm_to_speed.py)
+ROBOT_MAX_RPM="200.0"
+
+# Feedforward correction per motor (from pwm_to_speed.py)
+ROBOT_FF_LEFT="1.0"
+ROBOT_FF_RIGHT="1.0"
+
+# Speed controller gains
+ROBOT_PID_KP="0.9"
+ROBOT_PID_KI="5.2"

@@ -24,13 +24,16 @@ NS_PER_S = 1_000_000_000
 
 # Robot's path. 
 # (duration in seconds, left target RPM, right target RPM)
+# The steps cover what the robot will do later: starts, big speed changes,
+# reversing and turning on the spot. Negative RPM means backward.
 PROFILE = (
-    (2.0, 0, 0),
-    (4.0, 50, 50),
-    (2.0, 0, 0),
-    (3.0, 25, -25),
-    (4.0, 50, 50),
-    (3.0, 25, -25),
+    (1.0, 0, 0),        # stand still
+    (3.0, 100, 100),    # start from standstill
+    (3.0, 140, 140),    # step up
+    (3.0, 40, 40),      # big step down
+    (3.0, -60, -60),    # forward to reverse
+    (3.0, 80, -80),     # spin in place
+    (2.0, 0, 0),        # stop
 )
 
 

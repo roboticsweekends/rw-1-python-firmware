@@ -6,7 +6,8 @@ Step 3: measure how fast each wheel turns at a given PWM (open loop).
 Lift the robot. The script steps the PWM from 10% to 100% on both motors,
 waits for the speed to settle at each step, and prints the average RPM.
 At the end it suggests ROBOT_MAX_RPM, ROBOT_FF_LEFT and ROBOT_FF_RIGHT
-for settings.toml.
+for settings.toml. The feedforward values are set to FF_MARGIN (80%) of the
+exact ones on purpose; see the guide for why.
 """
 import time
 
@@ -18,6 +19,11 @@ SETTLE_TIME = 1.0       # seconds to let the speed settle after a step
 MEASURE_TIME = 1.0      # seconds to average over
 PERIOD = 0.02           # 20 ms, same as the control loop
 FF_REFERENCE = 0.6      # PWM step used to calculate the feedforward correction
+FF_MARGIN = 0.8         # suggest 80% of the exact feedforward: the speed reading lags a
+                        # little, and a slightly low guess lets P and I add the rest
+                        # without overshooting
+MIN_TOP_RPM = 150       # RW-1 reaches about 190-210 RPM at full PWM; much less means
+                        # the battery is off or low
 
 cfg = RobotConfig()
 motors = robot.make_motors()
@@ -65,12 +71,16 @@ full_l, full_r = results[1.0]
 max_rpm = min(full_l, full_r)          # the slower wheel sets the top speed
 ref_l, ref_r = results[FF_REFERENCE]
 print()
-if ref_l <= 0 or ref_r <= 0:
+if max_rpm < MIN_TOP_RPM:
+    print("Top speed is only {:.0f} RPM. RW-1 should reach about 190-210 RPM at 100% PWM.".format(
+        max_rpm))
+    print("Check that the battery is switched on and charged, then run this script again.")
+elif ref_l <= 0 or ref_r <= 0:
     print("A wheel didn't turn forward at {:.0f}% PWM: run check_encoders.py first".format(
         FF_REFERENCE * 100))
 else:
-    ff_l = FF_REFERENCE * max_rpm / ref_l
-    ff_r = FF_REFERENCE * max_rpm / ref_r
+    ff_l = FF_MARGIN * FF_REFERENCE * max_rpm / ref_l
+    ff_r = FF_MARGIN * FF_REFERENCE * max_rpm / ref_r
     print("Copy these lines into settings.toml:")
     print('ROBOT_MAX_RPM="{:.1f}"'.format(max_rpm))
     print('ROBOT_FF_LEFT="{:.3f}"'.format(ff_l))

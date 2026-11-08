@@ -8,7 +8,7 @@ MODE selects the controller, the same three steps as in the blog post:
   "p"    - feedforward + P
   "pi"   - feedforward + P + I
 
-The robot follows PROFILE, a list of (seconds, left RPM, right RPM) steps,
+The robot follows the path defined in PROFILE, a list of (seconds, left RPM, right RPM) steps,
 and prints the target and both measured speeds for Thonny's Plotter.
 """
 import time
@@ -22,13 +22,18 @@ CONTROL_PERIOD_NS = 20_000_000   # 20 ms (50 Hz control loop), in nanoseconds
 PRINT_EVERY = 1                  # print every loop (every 20 ms)
 NS_PER_S = 1_000_000_000
 
+# Robot's path. 
 # (duration in seconds, left target RPM, right target RPM)
+# The steps cover what the robot will do later: starts, big speed changes,
+# reversing and turning on the spot. Negative RPM means backward.
 PROFILE = (
-    (1.0, 0, 0),
-    (4.0, 100, 100),
-    (4.0, 60, 60),
-    (4.0, 100, 60),
-    (2.0, 0, 0),
+    (1.0, 0, 0),        # stand still
+    (3.0, 100, 100),    # start from standstill
+    (3.0, 140, 140),    # step up
+    (3.0, 40, 40),      # big step down
+    (3.0, -60, -60),    # forward to reverse
+    (3.0, 80, -80),     # spin in place
+    (2.0, 0, 0),        # stop
 )
 
 

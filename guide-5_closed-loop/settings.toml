@@ -8,10 +8,10 @@ ROBOT_TICKS_PER_REV=1920
 # Wheel RPM at full PWM (from pwm_to_speed.py)
 ROBOT_MAX_RPM="200.0"
 
-# Feedforward correction per motor (from pwm_to_speed.py)
-ROBOT_FF_LEFT="1.0"
-ROBOT_FF_RIGHT="1.0"
+# Feedforward correction per motor (from pwm_to_speed.py, about 80% of the exact value)
+ROBOT_FF_LEFT="0.8"
+ROBOT_FF_RIGHT="0.8"
 
 # Speed controller gains
-ROBOT_PID_KP="0.9"
-ROBOT_PID_KI="5.2"
+ROBOT_PID_KP="0.6"
+ROBOT_PID_KI="3.0"

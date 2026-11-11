@@ -19,6 +19,11 @@ _FIELDS = (
     ("ROBOT_FF_RIGHT",        "ff_right",        0.8,    float),  # feedforward correction, right motor
     ("ROBOT_PID_KP",          "pid_kp",          0.6,    float),
     ("ROBOT_PID_KI",          "pid_ki",          3.0,    float),
+    ("ROBOT_WHEEL_DIAMETER",  "wheel_diameter",  0.080,  float),  # wheel diameter D, m
+    ("ROBOT_TRACK_WIDTH",     "track_width",     0.195,  float),  # wheel center to center L, m
+    ("ROBOT_WHEEL_LIMIT_RPM", "wheel_limit_rpm", 170.0,  float),  # fastest wheel target kinematics may ask for
+    ("ROBOT_MAX_ACCEL",       "max_accel",       0.5,    float),  # linear acceleration limit, m/s^2
+    ("ROBOT_MAX_ANG_ACCEL",   "max_ang_accel",   3.0,    float),  # angular acceleration limit, rad/s^2
 )
 
 

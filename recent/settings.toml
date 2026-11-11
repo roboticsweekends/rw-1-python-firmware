@@ -3,15 +3,28 @@
 
 # Encoder: counts per wheel revolution with the divisor below
 ROBOT_ENCODER_DIVISOR=1
-ROBOT_TICKS_PER_REV=1920
+ROBOT_TICKS_PER_REV=1975
 
-# Wheel RPM at full PWM (from pwm_to_speed.py)
-ROBOT_MAX_RPM="200.0"
+# Wheel RPM at full PWM (from part 5's pwm_to_speed.py)
+ROBOT_MAX_RPM="191.8"
 
-# Feedforward correction per motor (from pwm_to_speed.py, about 80% of the exact value)
-ROBOT_FF_LEFT="0.8"
-ROBOT_FF_RIGHT="0.8"
+# Feedforward correction per motor (from part 5's pwm_to_speed.py, about 80% of the exact value)
+ROBOT_FF_LEFT="0.784"
+ROBOT_FF_RIGHT="0.769"
 
 # Speed controller gains
 ROBOT_PID_KP="0.6"
 ROBOT_PID_KI="3.0"
+
+# Robot geometry in meters (measure, then calibrate on the floor)
+ROBOT_WHEEL_DIAMETER="0.080"
+ROBOT_TRACK_WIDTH="0.195"
+
+# Fastest wheel speed the kinematics may ask for. Kept below ROBOT_MAX_RPM
+# (measured with the wheels in the air) so the PI controller has PWM in
+# reserve when the robot carries its weight on the floor
+ROBOT_WHEEL_LIMIT_RPM="152.8"
+
+# Acceleration limits: m/s^2 and rad/s^2
+ROBOT_MAX_ACCEL="0.5"
+ROBOT_MAX_ANG_ACCEL="3.0"

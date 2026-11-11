@@ -31,7 +31,8 @@ Current folders:
 |---|---|---|
 | `guide-3_motor-test/` | 3 | Single-file open-loop motor wiring check |
 | `guide-5_closed-loop/` | 5 | Encoders, calibration scripts, feedforward + PI wheel speed control |
-| `recent/` | latest | Same code as `guide-5_closed-loop/` |
+| `guide-6_kinematics/` | 6 | Differential drive kinematics: body speed (v, w) control, wheel and track calibration, rectangle test |
+| `recent/` | latest | Same code as `guide-6_kinematics/` |
 
 Guides that only cover mechanics or electronics have no folder.
 

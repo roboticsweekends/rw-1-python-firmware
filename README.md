@@ -21,7 +21,8 @@ latest firmware.
 |---|---|---|---|
 | [`guide-3_motor-test/`](guide-3_motor-test/) | 3 | Motor wiring check: drives both wheels open loop, no encoders | [Link](https://www.patreon.com/RoboticsWeekends/posts/3-rw-1-robot-172695270) |
 | [`guide-5_closed-loop/`](guide-5_closed-loop/) | 5 | Encoder check, calibration scripts and closed-loop (feedforward + PI) wheel speed control | [Link](https://www.patreon.com/RoboticsWeekends/posts) |
-| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-5_closed-loop/` |
+| [`guide-6_kinematics/`](guide-6_kinematics/) | 6 | Differential drive kinematics: drive by linear and angular speed, wheel and track calibration scripts, rectangle test | [Link](https://www.patreon.com/RoboticsWeekends/posts/6-rw-1-robot-175028720) |
+| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-6_kinematics/` | |
 
 - `guide-N_<topic>/` folders hold the code developed in guide N. They are
   snapshots: they don't change when later guides add new features.

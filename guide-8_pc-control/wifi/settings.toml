@@ -1,0 +1,47 @@
+# RW-1 Wi-Fi board configuration, read by lib/config.py on boot.
+# Float values MUST be quoted; CircuitPython only supports strings and ints here.
+# Values saved from the web page (stored in the board's NVM) win over these
+# until you press "Reset" there.
+#
+# Don't add CIRCUITPY_WIFI_SSID or CIRCUITPY_WIFI_PASSWORD: those keys start
+# CircuitPython's own web workflow, which takes port 80.
+
+# Robot geometry in meters (from guide 6's calibration)
+ROBOT_WHEEL_DIAMETER="0.080"
+ROBOT_TRACK_WIDTH="0.195"
+
+# Fastest wheel speed the kinematics may ask for. Kept below the controller
+# board's ROBOT_MAX_RPM so its PI controller has PWM in reserve on the floor
+ROBOT_WHEEL_LIMIT_RPM="152.8"
+
+# Acceleration limits: m/s^2 and rad/s^2
+ROBOT_MAX_ACCEL="0.5"
+ROBOT_MAX_ANG_ACCEL="3.0"
+
+# How often the wheel targets are sent to the controller board, ms
+DRIVE_PERIOD_MS=20
+
+# Serial link to the controller board: must be the same on both boards
+LINK_BAUD=921600
+
+# No telemetry from the controller board for this long = link lost, seconds
+CONTROLLER_TIMEOUT="0.5"
+
+# Stop the robot if the web page or PC program sends no drive request for this long, seconds
+CLIENT_TIMEOUT="0.5"
+
+# --- Wi-Fi --------------------------------------------------------------
+# The robot's name: also its address on the home network, http://rw-1.local
+ROBOT_NAME="rw-1"
+
+# The robot's own access point, always on. Empty AP_SSID = "RW-1-" plus the
+# last 4 hex digits of the board's MAC address. The password must be 8 to 63
+# characters; change it from the web page after the first start.
+AP_SSID=""
+AP_PASSWORD="rw1robot"
+
+# Home network (client mode). Leave empty and set it up from the web page,
+# or fill in here. Settings saved from the web page win over these.
+WIFI_SSID=""
+WIFI_PASSWORD=""
+

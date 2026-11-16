@@ -73,6 +73,7 @@ canvas.chart { width: 100%; height: 150px; display: block; }
   <button data-tab="tel">Telemetry</button>
   <button data-tab="set">Settings</button>
   <button data-tab="net">Network</button>
+  <button data-tab="upd">Update</button>
 </nav>
 </div>
 <div id="banner">The access point still uses the default password. <a href="#" id="bannerLink">Change it in Network</a>.</div>
@@ -181,6 +182,40 @@ canvas.chart { width: 100%; height: 150px; display: block; }
   <p id="netText" class="muted"></p>
 </section>
 
+<!-- ============ Update ============ -->
+<section id="upd">
+  <p class="muted">Send new code files to the robot over Wi-Fi, for example from the guide's
+    <b>controller/</b> and <b>wifi/</b> folders. Each board restarts into an update mode, checks every file,
+    and only then replaces the old ones; if anything goes wrong it keeps the old code.
+    The robot must stand still: the motors are off during an update.</p>
+  <div class="card" data-board="controller">
+    <h2>Controller board</h2>
+    <p class="muted bootText"></p>
+    <div class="row">
+      <label class="btn">Choose folder<input type="file" webkitdirectory hidden class="pickDir"></label>
+      <label class="btn">Choose files<input type="file" multiple hidden class="pickFiles"></label>
+      <label>into <select class="into"><option value="">the top folder</option><option value="lib/">lib/</option></select></label>
+    </div>
+    <table class="fileList"></table>
+    <div class="row"><button class="btn main go" disabled>Update the controller board</button></div>
+    <p class="updText"></p>
+  </div>
+  <div class="card" data-board="wifi_board">
+    <h2>Wi-Fi board</h2>
+    <p class="muted bootText"></p>
+    <div class="row">
+      <label class="btn">Choose folder<input type="file" webkitdirectory hidden class="pickDir"></label>
+      <label class="btn">Choose files<input type="file" multiple hidden class="pickFiles"></label>
+      <label>into <select class="into"><option value="">the top folder</option><option value="lib/">lib/</option><option value="www/">www/</option></select></label>
+    </div>
+    <table class="fileList"></table>
+    <div class="row"><button class="btn main go" disabled>Update the Wi-Fi board</button></div>
+    <p class="updText"></p>
+  </div>
+  <p class="muted">Not sent: boot.py (it stays as the way back), README and other non-code files, the
+    adafruit_httpserver library. settings.toml and lib/pins.py are only sent if you tick them: they hold
+    your robot's calibration and wiring.</p>
+</section>
 </main>
 
 
@@ -208,6 +243,7 @@ function showTab(name) {
   if (name !== "drive" && name !== "tel") release();
   if (name === "set") loadParams();
   if (name === "net") loadWifi();
+  if (name === "upd") loadUpdate();
   if (name === "tel") charts.forEach(c => c.resize());
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -720,6 +756,116 @@ function drawQr(text) {
   const c = cv.getContext("2d");
   c.fillStyle = "#fff"; c.fillRect(0, 0, q, q); c.fillStyle = "#000";
   for (let r = 0; r < n; r++) for (let x = 0; x < n; x++) if (m[r][x]) c.fillRect(x + 4, r + 4, 1, 1);
+}
+
+// ---------------- Update ----------------
+// The same rules as lib/updates.py on the boards
+const UPD_FOLDERS = ["", "lib/", "www/"], UPD_EXT = [".py", ".toml", ".html", ".txt", ".json"];
+const UPD_MAX = 65536;
+// Robot-specific files: shown but not ticked, so the robot's own values stay
+const KEEP = {"settings.toml": "your calibration: tick only to replace it", "lib/pins.py": "your pins: tick only to replace them"};
+function updCheck(name) {
+  const i = name.lastIndexOf("/"), folder = name.slice(0, i + 1), base = name.slice(i + 1);
+  if (!UPD_FOLDERS.includes(folder)) return "not in a folder the robot uses";
+  if (name === "boot.py") return "never sent (the way back)";
+  if (!/^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(base) || !UPD_EXT.some(e => base.endsWith(e))) return "not a code file";
+  return null;
+}
+for (const card of document.querySelectorAll("#upd .card")) {
+  const board = card.dataset.board, list = [];     // [{name, file, send, why}]
+  const q = c => card.querySelector(c);
+  function render() {
+    q(".fileList").innerHTML = list.map((f, i) =>
+      `<tr><td><label><input type="checkbox" data-i="${i}" ${f.send ? "checked" : ""} ${f.why ? "disabled" : ""}> ` +
+      `${escapeHtml(f.name)}</label>${f.why ? ` <span class="muted">${f.why}</span>` : ""}` +
+      `${KEEP[f.name] ? ` <span class="muted">(${KEEP[f.name]})</span>` : ""}</td>` +
+      `<td class="muted" style="text-align:right;white-space:nowrap">${(f.file.size / 1024).toFixed(1)} KB</td></tr>`).join("");
+    q(".fileList").querySelectorAll("input").forEach(c => c.onchange = () => { list[c.dataset.i].send = c.checked; render(); });
+    q(".go").disabled = !list.some(f => f.send);
+  }
+  function add(files, fromFolder) {
+    list.length = 0;
+    for (const file of files) {
+      // From a folder: "controller/lib/wheels.py" -> "lib/wheels.py"
+      const name = fromFolder ? file.webkitRelativePath.split("/").slice(1).join("/") : q(".into").value + file.name;
+      if (name.split("/").some(p => p.startsWith(".") || p === "__pycache__")) continue;
+      let why = updCheck(name);
+      if (!why && file.size > UPD_MAX) why = "too big";
+      if (why && fromFolder && why === "not in a folder the robot uses") continue;   // e.g. lib/adafruit_httpserver/
+      list.push({name, file, why, send: !why && !KEEP[name]});
+    }
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    render();
+  }
+  q(".pickDir").onchange = e => add(e.target.files, true);
+  q(".pickFiles").onchange = e => add(e.target.files, false);
+  q(".go").onclick = async () => {
+    const files = list.filter(f => f.send), text = q(".updText");
+    if (!confirm(`Send ${files.length} file(s) to the ${board === "controller" ? "controller" : "Wi-Fi"} board? ` +
+                 "It restarts, and the robot can't drive for a moment.")) return;
+    q(".go").disabled = true; release();
+    const show = t => { text.textContent = t; };
+    try {
+      if (board === "controller") await updateController(files, show);
+      else await updateWifiBoard(files, show);
+    } catch (e) { show("Update failed: " + e.message + ". The board keeps its old code."); }
+    q(".go").disabled = false;
+  };
+}
+async function upload(f) {
+  const r = await fetch(`/api/update/file?name=${f.name}&size=${f.file.size}`,
+                        {method: "POST", body: await f.file.arrayBuffer()});
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+}
+async function pollJson(path, test, seconds) {
+  const end = Date.now() + seconds * 1000;
+  while (Date.now() < end) {
+    try {
+      const r = await fetch(path, {cache: "no-store"});
+      if (r.ok) { const d = await r.json(); if (test(d)) return d; }
+    } catch (e) { /* busy or restarting: ask again */ }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  throw new Error("no answer from the robot");
+}
+async function updateController(files, show) {
+  await api("/api/update/clear", {});
+  for (const [i, f] of files.entries()) { show(`Uploading ${f.name} (${i + 1} of ${files.length})…`); await upload(f); }
+  show("Sending the files to the controller board (the page may freeze for a few seconds)…");
+  await api("/api/update/controller", {});
+  const s = await pollJson("/api/update/status", d => d.controller.state !== "running", 120);
+  if (s.controller.state !== "done") throw new Error(s.controller.error);
+  show(`Done: ${s.controller.files.join(", ")}. The controller board restarted with the new code.`);
+  loadParams();
+}
+async function updateWifiBoard(files, show) {
+  show("Restarting the Wi-Fi board into update mode…");
+  await api("/api/update/wifi_board", {});
+  await new Promise(r => setTimeout(r, 2000));
+  await pollJson("/api/update/status", d => d.mode === "update", 60);
+  try {
+    for (const [i, f] of files.entries()) { show(`Uploading ${f.name} (${i + 1} of ${files.length})…`); await upload(f); }
+  } catch (e) {
+    await api("/api/update/abort", {}).catch(() => {});
+    throw e;
+  }
+  show("Putting the new files in place and restarting…");
+  await api("/api/update/commit", {});
+  await new Promise(r => setTimeout(r, 3000));
+  await pollJson("/api/info", d => !!d.name, 60);
+  show("Done. Reloading the page…");
+  setTimeout(() => location.reload(), 1000);
+}
+async function loadUpdate() {
+  try {
+    const s = await api("/api/update/status");
+    for (const card of document.querySelectorAll("#upd .card")) {
+      const ok = s.boot_py[card.dataset.board];
+      card.querySelector(".bootText").innerHTML = ok ? "Ready: boot.py is on this board." :
+        '<span style="color:var(--stop)">boot.py is missing on this board: copy it from the guide\'s folder over USB once.</span>';
+    }
+  } catch (e) {}
 }
 
 // ---------------- Start ----------------

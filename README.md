@@ -14,6 +14,8 @@ latest firmware.
 - Cytron Motion 2350 Pro (RP2350) controller running CircuitPython
 - Two DC gear motors on the board's M1 (left) and M2 (right) channels
 - Two quadrature wheel encoders
+- From guide 7: an ESP32-S3-Zero Wi-Fi board running CircuitPython, wired to
+  the controller over a serial link
 
 ## Repository layout
 
@@ -22,7 +24,8 @@ latest firmware.
 | [`guide-3_motor-test/`](guide-3_motor-test/) | 3 | Motor wiring check: drives both wheels open loop, no encoders | [Link](https://www.patreon.com/RoboticsWeekends/posts/3-rw-1-robot-172695270) |
 | [`guide-5_closed-loop/`](guide-5_closed-loop/) | 5 | Encoder check, calibration scripts and closed-loop (feedforward + PI) wheel speed control | [Link](https://www.patreon.com/RoboticsWeekends/posts) |
 | [`guide-6_kinematics/`](guide-6_kinematics/) | 6 | Differential drive kinematics: drive by linear and angular speed, wheel and track calibration scripts, rectangle test | [Link](https://www.patreon.com/RoboticsWeekends/posts/6-rw-1-robot-175028720) |
-| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-6_kinematics/` | |
+| [`guide-7_wifi-control/`](guide-7_wifi-control/) | 7 | Wireless control: ESP32-S3 Wi-Fi board, serial link, web page (drive, telemetry, settings, Wi-Fi set-up), JSON/WebSocket API | [Link](https://www.patreon.com/cw/RoboticsWeekends/posts) |
+| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-7_wifi-control/` | |
 
 - `guide-N_<topic>/` folders hold the code developed in guide N. They are
   snapshots: they don't change when later guides add new features.
@@ -37,7 +40,8 @@ Guides without a folder cover mechanics and electronics only.
    It shows up as a drive named **CIRCUITPY**.
 2. Pick a folder (`recent/` or the `guide-N_*` folder you are working on) and
    copy **its contents** to the root of the CIRCUITPY drive, replacing what is
-   there.
+   there. From guide 7 on there are two boards: copy `controller/` to the
+   controller board and `wifi/` to the Wi-Fi board (see the folder's README).
 3. The board restarts and runs `code.py`. Open the serial console (for example
    in Thonny) to see its output.
 

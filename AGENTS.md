@@ -15,6 +15,9 @@ Target hardware:
 - **Board:** Cytron Motion 2350 Pro (RP2350), running CircuitPython
 - **Motors:** two DC gear motors on the board's M1 (left) and M2 (right) H-bridge channels
 - **Encoders:** two quadrature encoders read with `rotaryio`
+- **From guide 7:** a second board, an ESP32-S3-Zero (the "Wi-Fi board"), also
+  running CircuitPython, wired to the Motion 2350 Pro (the "controller board")
+  over a 921600-baud serial link
 
 ## Repository layout
 
@@ -32,7 +35,8 @@ Current folders:
 | `guide-3_motor-test/` | 3 | Single-file open-loop motor wiring check |
 | `guide-5_closed-loop/` | 5 | Encoders, calibration scripts, feedforward + PI wheel speed control |
 | `guide-6_kinematics/` | 6 | Differential drive kinematics: body speed (v, w) control, wheel and track calibration, rectangle test |
-| `recent/` | latest | Same code as `guide-6_kinematics/` |
+| `guide-7_wifi-control/` | 7 | Wi-Fi board: serial link, web server, web page, JSON/WebSocket API |
+| `recent/` | latest | Same code as `guide-7_wifi-control/` |
 
 Guides that only cover mechanics or electronics have no folder.
 
@@ -40,6 +44,20 @@ Each folder is a complete, self-contained **CIRCUITPY drive image**: its
 contents are copied as-is to the root of the board's CIRCUITPY drive.
 `code.py` runs on boot, `lib/` holds the modules it imports, and
 `settings.toml` holds the robot's tunable parameters.
+
+From guide 7 on, a guide folder holds one image per board:
+
+```
+guide-7_wifi-control/
+  controller/   CIRCUITPY image for the controller board (Motion 2350 Pro)
+  wifi/         CIRCUITPY image for the Wi-Fi board (ESP32-S3-Zero)
+  README.md
+```
+
+`lib/link.py` and `lib/store.py` are the same file in `controller/` and
+`wifi/`: change both together.
+`wifi/lib/adafruit_httpserver/` is not in the repo (readers copy it from the
+Adafruit library bundle).
 
 ## Rules for changes
 
@@ -85,15 +103,23 @@ contents are copied as-is to the root of the board's CIRCUITPY drive.
 
 - Code is read by guide readers, many of them beginners: prefer plain, short,
   well-commented code over clever abstractions.
+- Wi-Fi board: no `asyncio`, a plain loop that never sleeps (`ticker.due()`);
+  anything slow (scans, connecting) is refused while the robot is
+  driven. The web page `wifi/www/index.html` is one self-contained file with
+  no internet resources (it must work on the robot's own access point).
+- Safety rules that must survive changes: the client timeout (the robot stops
+  when drive requests stop), the controller's link timeout, the STOP latch
+  (only the client that pressed STOP ends it).
 
 ## Testing
 
-There is no automated test suite and the code cannot run on a desktop Python
-(it needs `board`, `pwmio`, `rotaryio`). A syntax check is the most that can be
-done locally:
+There is no automated test suite and the board code cannot run on a desktop
+Python (it needs `board`, `pwmio`, `rotaryio`). A syntax check is the most that
+can be done locally:
 
 ```bash
-python3 -m py_compile recent/*.py recent/lib/*.py
+python3 -m py_compile recent/*.py recent/lib/*.py                       # guides 3-6
+python3 -m py_compile recent/*/*.py recent/controller/lib/*.py recent/wifi/lib/*.py   # guide 7 on
 ```
 
 Behaviour is verified on the robot itself (wheels lifted off the ground). Say

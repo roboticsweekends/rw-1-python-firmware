@@ -20,3 +20,8 @@ ENCODER_LEFT_A = board.GP1
 ENCODER_LEFT_B = board.GP0
 ENCODER_RIGHT_A = board.GP2
 ENCODER_RIGHT_B = board.GP3
+
+# Serial link to the Wi-Fi board (guide 7), on servo ports 4 and 5.
+# GP4 and GP5 are the RP2350's UART1 TX and RX.
+LINK_TX = board.GP4
+LINK_RX = board.GP5

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RW-1</title>
+<link rel="icon" href="data:,">
+<style>
+:root { color-scheme: light dark; --accent: #2b7de9; --stop: #d93025; --ok: #1e8e3e; --warn: #e37400;
+        --line: #8884; --muted: #888; --card: color-mix(in srgb, CanvasText 5%, Canvas); }
+* { box-sizing: border-box; }
+body { font-family: system-ui, sans-serif; margin: 0; }
+#top { position: sticky; top: 0; z-index: 2; background: Canvas; }
+header { border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 10px; padding: 8px 12px; flex-wrap: wrap; }
+h1 { font-size: 1.15rem; margin: 0; flex: 1; white-space: nowrap; }
+h2 { font-size: 1rem; margin: 18px 0 8px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #999; margin-right: 4px; }
+.ok { background: var(--ok); } .bad { background: var(--stop); }
+.status { font-size: .85rem; white-space: nowrap; }
+#stop { background: var(--stop); color: #fff; border: 0; border-radius: 8px; font-size: 1.05rem; font-weight: 700; padding: 10px 20px; }
+nav { display: flex; border-bottom: 1px solid var(--line); }
+nav button { flex: 1; background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 4px; font-size: .95rem; color: inherit; }
+nav button.on { border-bottom-color: var(--accent); font-weight: 600; }
+main { max-width: 760px; margin: 0 auto; padding: 8px 12px 40px; }
+section { display: none; } section.on { display: block; }
+#banner { display: none; margin: 8px 12px 0; padding: 8px 12px; border-radius: 8px; background: color-mix(in srgb, var(--warn) 18%, Canvas); }
+#msg { min-height: 1.3em; margin: 6px 0; color: var(--stop); }
+button, input, select { font: inherit; }
+.btn { border: 1px solid var(--accent); background: none; color: var(--accent); border-radius: 6px; padding: 7px 14px; cursor: pointer; }
+.btn.main { background: var(--accent); color: #fff; }
+.btn.danger { border-color: var(--stop); color: var(--stop); }
+.btn:disabled { opacity: .45; cursor: default; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+input[type=text], input[type=password], input[type=number] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: Canvas; color: CanvasText; min-width: 0; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+td, th { padding: 5px 6px; border-bottom: 1px solid var(--line); text-align: left; font-weight: normal; }
+th { color: var(--muted); font-size: .85rem; }
+.num td:nth-child(n+2), .num th:nth-child(n+2) { text-align: right; }
+.muted { color: var(--muted); font-size: .85rem; }
+.card { background: var(--card); border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+/* Drive */
+#driveBox { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; justify-content: center; }
+#pad, #pad2 { touch-action: none; display: block; width: min(86vw, 320px); height: min(86vw, 320px); border-radius: 50%;
+       background: color-mix(in srgb, var(--accent) 10%, transparent); border: 2px solid var(--accent); }
+#pad2 { width: 140px; height: 140px; flex: none; }
+#driveSide { flex: 1; min-width: 240px; }
+#scale { width: 100%; }
+/* Telemetry */
+canvas.chart { width: 100%; height: 150px; display: block; }
+.legend { font-size: .8rem; display: flex; gap: 12px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin-right: 4px; }
+/* Settings */
+.set td:first-child { width: 55%; }
+.set input { width: 7.5em; text-align: right; }
+.set .changed input { border-color: var(--accent); }
+.set .err input { border-color: var(--stop); }
+.tag { font-size: .7rem; border: 1px solid var(--muted); color: var(--muted); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+/* Network */
+#nets button { display: flex; width: 100%; justify-content: space-between; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px 4px; color: inherit; text-align: left; }
+#qr { width: 168px; height: 168px; image-rendering: pixelated; background: #fff; padding: 8px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="top">
+<header>
+  <h1 id="name">RW-1</h1>
+  <span class="status"><span id="wsDot" class="dot"></span>robot</span>
+  <span class="status"><span id="linkDot" class="dot"></span>controller</span>
+  <button id="stop">STOP</button>
+</header>
+<nav>
+  <button data-tab="drive" class="on">Drive</button>
+  <button data-tab="tel">Telemetry</button>
+  <button data-tab="set">Settings</button>
+  <button data-tab="net">Network</button>
+</nav>
+</div>
+<div id="banner">The access point still uses the default password. <a href="#" id="bannerLink">Change it in Network</a>.</div>
+<main>
+<p id="msg"></p>
+
+<!-- ============ Drive ============ -->
+<section id="drive" class="on">
+  <div id="driveBox">
+    <canvas id="pad" width="320" height="320"></canvas>
+    <div id="driveSide">
+      <label>Speed <span id="scaleText">50%</span><br><input id="scale" type="range" min="10" max="100" value="50"></label>
+      <p class="muted" id="limitsText"></p>
+      <table class="num">
+        <tr><th></th><th>commanded</th><th>measured</th></tr>
+        <tr><td>v, m/s</td><td id="vc">-</td><td id="v">-</td></tr>
+        <tr><td>ω, rad/s</td><td id="wc">-</td><td id="w">-</td></tr>
+        <tr><td>left wheel, RPM</td><td id="tl">-</td><td id="rl">-</td></tr>
+        <tr><td>right wheel, RPM</td><td id="tr">-</td><td id="rr">-</td></tr>
+      </table>
+      <p class="muted">Drag the pad: up = forward, left/right = turn.
+        On a keyboard: arrow keys or W A S D, space = STOP.
+        On a gamepad: left stick, B = STOP.</p>
+      <p class="muted" id="gpText"></p>
+      <p class="muted" id="driverText"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Telemetry ============ -->
+<section id="tel">
+  <div class="row">
+    <button class="btn" id="pause">Pause</button>
+    <label>Window <select id="window"><option>5</option><option selected>10</option><option>30</option></select> s</label>
+    <button class="btn" id="rec">Record</button>
+    <button class="btn" id="csv" disabled>Download CSV</button>
+    <span class="muted" id="recText"></span>
+  </div>
+  <div class="row" style="align-items:center">
+    <canvas id="pad2" width="160" height="160"></canvas>
+    <div class="muted">Drive from here too: the small pad, the keys or the gamepad, at the Speed set on the Drive tab.
+      <br>v <b id="v2">-</b> m/s, ω <b id="w2">-</b> rad/s</div>
+  </div>
+  <div id="charts"></div>
+  <p class="muted">50 samples a second from the controller board. Record keeps every sample until you stop it
+    (up to 10 minutes); the CSV has one row per sample with the same columns as the charts.</p>
+</section>
+
+<!-- ============ Settings ============ -->
+<section id="set">
+  <p class="muted">Values in blue are changed but not applied yet. <b>Apply</b> uses them at once,
+    <b>Save</b> keeps them after a restart, <b>Reset</b> goes back to the values in the board's settings.toml.
+    Grey values can only be changed in settings.toml.</p>
+  <h2>Wi-Fi board: geometry and driving</h2>
+  <table class="set" id="setWifi"></table>
+  <div class="row">
+    <button class="btn main" data-apply="wifi_board">Apply</button>
+    <button class="btn" data-save="wifi_board">Save</button>
+    <button class="btn danger" data-reset="wifi_board">Reset</button>
+  </div>
+  <h2>Controller board: wheels</h2>
+  <table class="set" id="setCtrl"></table>
+  <div class="row">
+    <button class="btn main" data-apply="controller">Apply</button>
+    <button class="btn" data-save="controller">Save</button>
+    <button class="btn danger" data-reset="controller">Reset</button>
+  </div>
+  <p class="muted" id="setText"></p>
+</section>
+
+<!-- ============ Network ============ -->
+<section id="net">
+  <div class="card">
+    <table id="netState"></table>
+    <div class="row" style="align-items:flex-start">
+      <canvas id="qr" width="1" height="1"></canvas>
+      <div><b>Open this page on a phone</b><br><span class="muted" id="qrText"></span></div>
+    </div>
+  </div>
+
+  <h2>Home network</h2>
+  <p class="muted">The robot joins your home network and keeps its own access point, so you can always reach it at
+    http://192.168.4.1. Scanning and testing pause the access point for a few seconds; reconnect if the page loses the robot.</p>
+  <div class="row"><button class="btn" id="scan">Scan</button><span class="muted" id="scanText"></span></div>
+  <div id="nets"></div>
+  <div class="row">
+    <input type="text" id="ssid" placeholder="Network name" autocomplete="off" style="flex:1">
+    <input type="password" id="pass" placeholder="Password" autocomplete="off" style="flex:1">
+  </div>
+  <div class="row">
+    <button class="btn" id="test">Test</button>
+    <button class="btn main" id="saveClient">Save and restart</button>
+    <button class="btn" id="reconnect">Reconnect now</button>
+    <button class="btn" id="lastTest">Show last test result</button>
+  </div>
+  <p id="clientText" class="muted"></p>
+
+  <h2>Robot's access point</h2>
+  <div class="row">
+    <input type="text" id="apSsid" placeholder="Access point name" style="flex:1">
+    <input type="password" id="apPass" placeholder="New password (8-63 characters)" style="flex:1">
+    <button class="btn main" id="saveAp">Save and restart</button>
+  </div>
+  <h2>Robot's name</h2>
+  <div class="row">
+    <input type="text" id="robotName" placeholder="rw-1" style="flex:1">
+    <span class="muted">.local</span>
+    <button class="btn main" id="saveName">Save and restart</button>
+  </div>
+  <h2>Start over</h2>
+  <div class="row">
+    <button class="btn danger" id="forget">Forget all Wi-Fi settings</button>
+    <span class="muted">Back to the access point only, with the default name and password.</span>
+  </div>
+  <p id="netText" class="muted"></p>
+</section>
+
+</main>
+
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = (x, d) => (x === null || x === undefined) ? "-" : (+x).toFixed(d);
+let ws, fields = [], ix = {}, info = null, limits = {v_max: 0.5, w_max: 5}, lastState = {};
+
+function say(text, ok) { $("msg").textContent = text || ""; $("msg").style.color = ok ? "var(--ok)" : ""; }
+
+async function api(path, body) {
+  const opt = body === undefined ? {} :
+    {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)};
+  const r = await fetch(path, opt);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+// ---------------- Tabs ----------------
+function showTab(name) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  document.querySelectorAll("section").forEach(s => s.classList.toggle("on", s.id === name));
+  if (name !== "drive" && name !== "tel") release();
+  if (name === "set") loadParams();
+  if (name === "net") loadWifi();
+  if (name === "tel") charts.forEach(c => c.resize());
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$("bannerLink").onclick = e => { e.preventDefault(); showTab("net"); };
+
+// ---------------- WebSocket ----------------
+function connect() {
+  ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onopen = () => { $("wsDot").className = "dot ok"; say(""); };
+  ws.onclose = () => { $("wsDot").className = "dot bad"; $("linkDot").className = "dot"; setTimeout(connect, 1000); };
+  ws.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.t === "hello") onHello(m);
+    else if (m.t === "tel") onTelemetry(m.s);
+    else if (m.t === "state") onState(m);
+    else if (m.t === "error") say(m.text.startsWith("stopped") ? LATCHED :
+                                  m.text.startsWith("held") ? "Stopped from another client: it has to let go first." : m.text);
+  };
+}
+function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+setInterval(() => send({t: "ping"}), 2000);
+
+function onHello(m) {
+  fields = m.fields; ix = Object.fromEntries(fields.map((f, i) => [f, i]));
+  onInfo(m);
+}
+function onInfo(m) {
+  info = m; limits = m.limits;
+  $("name").textContent = m.name.toUpperCase();
+  document.title = m.name.toUpperCase();
+  $("limitsText").textContent = `Full speed: ${limits.v_max.toFixed(2)} m/s, ${limits.w_max.toFixed(1)} rad/s`;
+  $("banner").style.display = m.wifi.ap.default_password ? "block" : "none";
+  showNetState(m.wifi);
+}
+const LATCHED = "Stopped. Let go of the pad, keys or stick to drive again (tap the pad once if you're not touching it).";
+function onState(m) {
+  lastState = m;
+  $("linkDot").className = "dot " + (m.controller_ok ? "ok" : "bad");
+  if (!m.controller_ok) say("No answer from the controller board: is the robot switched on?");
+  else if (m.latched) say(LATCHED);
+  else if ($("msg").textContent.startsWith("No answer") || $("msg").textContent === LATCHED) say("");
+  $("driverText").textContent = m.driver && !sendTimer ? `Driven by another client (${m.driver})` : "";
+}
+
+// ---------------- Drive ----------------
+// Two pads: the big one on the Drive tab and a small one on the Telemetry tab
+const pads = [$("pad"), $("pad2")];
+let stick = null, keys = new Set(), sendTimer = null;
+function drawPad() {
+  const acc = getComputedStyle(document.documentElement).getPropertyValue("--accent");
+  for (const pad of pads) {
+    const c = pad.getContext("2d"), r = pad.width / 2;
+    c.clearRect(0, 0, pad.width, pad.height);
+    c.strokeStyle = acc; c.globalAlpha = .35; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(r, 10); c.lineTo(r, 2 * r - 10); c.moveTo(10, r); c.lineTo(2 * r - 10, r); c.stroke();
+    c.globalAlpha = 1;
+    const s = stick || {x: 0, y: 0};
+    c.beginPath(); c.arc(r + s.x * r * .8, r - s.y * r * .8, r * .175, 0, 7); c.fillStyle = acc; c.fill();
+  }
+}
+function stickFrom(e) {
+  const b = e.currentTarget.getBoundingClientRect();
+  let x = (e.clientX - b.left) / b.width * 2 - 1, y = 1 - (e.clientY - b.top) / b.height * 2;
+  const len = Math.hypot(x, y); if (len > 1) { x /= len; y /= len; }
+  return {x, y};
+}
+// Driving works on the Drive and Telemetry tabs
+const driveTab = () => $("drive").classList.contains("on") || $("tel").classList.contains("on");
+function request() {
+  const k = $("scale").value / 100;
+  return {t: "drive", v: +(stick.y * limits.v_max * k).toFixed(3), w: +(-stick.x * limits.w_max * k).toFixed(3)};
+}
+function startSending() {
+  if (sendTimer) return;
+  send(request()); sendTimer = setInterval(() => send(request()), 50);   // 20 requests a second
+}
+function release() {
+  keys.clear();
+  if (!stick) return;
+  stick = null; clearInterval(sendTimer); sendTimer = null;
+  send({t: "drive", v: 0, w: 0}); drawPad();
+}
+// Letting go always sends a zero: it also ends a STOP (the robot waits for v=0, w=0)
+const letGo = () => { if (stick) release(); else send({t: "drive", v: 0, w: 0}); };
+for (const pad of pads) {
+  pad.addEventListener("pointerdown", e => { pad.setPointerCapture(e.pointerId); stick = stickFrom(e); drawPad(); startSending(); });
+  pad.addEventListener("pointermove", e => { if (stick && !keys.size && !gpActive) { stick = stickFrom(e); drawPad(); } });
+  pad.addEventListener("pointerup", letGo); pad.addEventListener("pointercancel", letGo);
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
+window.addEventListener("blur", release);
+
+const KEY = {ArrowUp: "f", KeyW: "f", ArrowDown: "b", KeyS: "b", ArrowLeft: "l", KeyA: "l", ArrowRight: "r", KeyD: "r"};
+function keyStick() {
+  const y = (keys.has("f") ? 1 : 0) - (keys.has("b") ? 1 : 0), x = (keys.has("r") ? 1 : 0) - (keys.has("l") ? 1 : 0);
+  return {x: y ? x * .6 : x, y};
+}
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.code === "Space") { e.preventDefault(); stopNow(); return; }
+  if (!driveTab() || !KEY[e.code]) return;
+  e.preventDefault(); keys.add(KEY[e.code]); stick = keyStick(); drawPad(); startSending();
+});
+document.addEventListener("keyup", e => {
+  if (!KEY[e.code] || !keys.has(KEY[e.code])) return;
+  keys.delete(KEY[e.code]);
+  if (keys.size) { stick = keyStick(); drawPad(); } else letGo();
+});
+// Gamepad (left stick). Browsers only allow it on secure pages; see gamepadHelp().
+const DEADZONE = 0.15;
+let gpActive = false, gpStopHeld = false, gpName = "";
+const dz = v => Math.abs(v) < DEADZONE ? 0 : Math.sign(v) * (Math.abs(v) - DEADZONE) / (1 - DEADZONE);
+function gamepadLoop() {
+  let pads = [];
+  try { pads = navigator.getGamepads ? Array.from(navigator.getGamepads()) : []; } catch (e) { pads = []; }
+  const gp = pads.find(g => g && g.connected);
+  const name = gp ? gp.id.replace(/\s*\(.*$/, "") : "";
+  if (name !== gpName) { gpName = name; gamepadHelp(); }
+  if (gp && driveTab() && !keys.size) {
+    const stopPressed = gp.buttons[1] && gp.buttons[1].pressed;
+    if (stopPressed && !gpStopHeld) stopNow();
+    gpStopHeld = stopPressed;
+    let x = dz(gp.axes[0] || 0), y = -dz(gp.axes[1] || 0);
+    const len = Math.hypot(x, y); if (len > 1) { x /= len; y /= len; }
+    if (x || y) { gpActive = true; stick = {x, y}; drawPad(); startSending(); }
+    else if (gpActive) { gpActive = false; letGo(); }
+  } else if (gpActive) { gpActive = false; letGo(); }
+  setTimeout(gamepadLoop, 50);
+}
+function gamepadHelp() {
+  if (gpName) { $("gpText").textContent = `Gamepad: ${gpName}`; return; }
+  $("gpText").textContent = window.isSecureContext
+    ? "Gamepad: none found. Connect one and press a button."
+    : /Firefox/.test(navigator.userAgent)
+      ? "Gamepad: Firefox blocks gamepads on http:// pages. Open about:config, add a String " +
+        "preference dom.securecontext.allowlist = " + location.hostname + " and reload this page."
+      : "Gamepad: this browser blocks gamepads on http:// pages. In Chrome, open " +
+        "chrome://flags/#unsafely-treat-insecure-origin-as-secure, add " + location.origin +
+        ", enable it and restart Chrome.";
+}
+window.addEventListener("gamepadconnected", gamepadHelp);
+
+function stopNow() {
+  release();
+  if (ws && ws.readyState === 1) send({t: "stop"});
+  else fetch("/api/stop", {method: "POST"}).catch(() => {});   // no live connection: try HTTP
+}
+$("stop").onclick = stopNow;
+$("scale").oninput = () => { $("scaleText").textContent = $("scale").value + "%"; };
+
+// ---------------- Telemetry ----------------
+const CHARTS = [
+  {title: "Linear speed v, m/s", lines: [["v_cmd", "commanded", "#2b7de9", true], ["v", "measured", "#2b7de9"]]},
+  {title: "Angular speed ω, rad/s", lines: [["w_cmd", "commanded", "#9334e6", true], ["w", "measured", "#9334e6"]]},
+  {title: "Wheel speed, RPM", lines: [["target_l", "left target", "#e8710a", true], ["rpm_l", "left", "#e8710a"],
+                                       ["target_r", "right target", "#12a4af", true], ["rpm_r", "right", "#12a4af"]]},
+  {title: "Motor duty, %", lines: [["duty_l", "left", "#e8710a"], ["duty_r", "right", "#12a4af"]]},
+];
+const MAX_SAMPLES = 1600;          // 30 s at 50 samples/s
+let samples = [], dirty = false, paused = false, t0 = null, lastMs = null, tSec = 0, recording = null;
+class Chart {
+  constructor(spec) {
+    this.spec = spec;
+    const box = document.createElement("div"); box.className = "card";
+    box.innerHTML = `<b>${spec.title}</b><div class="legend">${spec.lines.map(l =>
+      `<span><i style="background:${l[2]};${l[3] ? "opacity:.45" : ""}"></i>${l[1]}</span>`).join("")}</div>`;
+    this.canvas = document.createElement("canvas"); this.canvas.className = "chart";
+    box.appendChild(this.canvas); $("charts").appendChild(box);
+    this.ctx = this.canvas.getContext("2d");
+  }
+  resize() {
+    const r = window.devicePixelRatio || 1, w = this.canvas.clientWidth, h = this.canvas.clientHeight;
+    if (w && (this.canvas.width !== Math.round(w * r))) { this.canvas.width = Math.round(w * r); this.canvas.height = Math.round(h * r); }
+  }
+  draw(data, span) {
+    const c = this.ctx, W = this.canvas.width, H = this.canvas.height, r = window.devicePixelRatio || 1;
+    if (!W) return;
+    c.clearRect(0, 0, W, H);
+    const tEnd = data.length ? data[data.length - 1][0] : 0, tStart = tEnd - span;
+    let lo = Infinity, hi = -Infinity;
+    for (const s of data) if (s[0] >= tStart) for (const l of this.spec.lines) { const v = s[1][ix[l[0]]]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    if (lo === Infinity) { lo = -1; hi = 1; }
+    const pad = Math.max((hi - lo) * .1, 1e-3); lo -= pad; hi += pad;
+    const L = 46 * r, X = t => L + (t - tStart) / span * (W - L - 4 * r), Y = v => (hi - v) / (hi - lo) * (H - 14 * r) + 4 * r;
+    c.font = `${11 * r}px system-ui`; c.fillStyle = "#888"; c.strokeStyle = "#8884"; c.lineWidth = r;
+    for (const v of ticks(lo, hi)) {
+      c.beginPath(); c.moveTo(L, Y(v)); c.lineTo(W, Y(v)); c.stroke();
+      c.fillText(+v.toPrecision(3), 2 * r, Y(v) + 4 * r);
+    }
+    for (const l of this.spec.lines) {
+      c.strokeStyle = l[2]; c.globalAlpha = l[3] ? .45 : 1; c.lineWidth = (l[3] ? 3 : 1.6) * r;
+      c.beginPath(); let first = true;
+      for (const s of data) {
+        if (s[0] < tStart) continue;
+        const x = X(s[0]), y = Y(s[1][ix[l[0]]]);
+        first ? c.moveTo(x, y) : c.lineTo(x, y); first = false;
+      }
+      c.stroke(); c.globalAlpha = 1;
+    }
+  }
+}
+function ticks(lo, hi) {
+  const step0 = (hi - lo) / 4, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 5, 10].map(k => k * mag).find(s => s >= step0);
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(Math.abs(v) < step / 1e6 ? 0 : v);
+  return out;
+}
+const charts = CHARTS.map(s => new Chart(s));
+window.addEventListener("resize", () => charts.forEach(c => c.resize()));
+
+function onTelemetry(batch) {
+  for (const s of batch) {
+    // The controller's ms counter wraps at 65536: keep our own time in seconds
+    if (lastMs !== null) tSec += ((s[ix.ms] - lastMs + 65536) % 65536) / 1000;
+    lastMs = s[ix.ms];
+    samples.push([tSec, s]);
+    if (recording && recording.length < 30000) recording.push([tSec, s]);
+  }
+  if (samples.length > MAX_SAMPLES) samples.splice(0, samples.length - MAX_SAMPLES);
+  dirty = true;
+  const s = batch[batch.length - 1];
+  if (s) {
+    $("vc").textContent = fmt(s[ix.v_cmd], 3); $("v").textContent = fmt(s[ix.v], 3);
+    $("wc").textContent = fmt(s[ix.w_cmd], 2); $("w").textContent = fmt(s[ix.w], 2);
+    $("tl").textContent = fmt(s[ix.target_l], 1); $("rl").textContent = fmt(s[ix.rpm_l], 1);
+    $("tr").textContent = fmt(s[ix.target_r], 1); $("rr").textContent = fmt(s[ix.rpm_r], 1);
+    $("v2").textContent = fmt(s[ix.v], 2); $("w2").textContent = fmt(s[ix.w], 2);
+  }
+  if (recording) $("recText").textContent = `${recording.length} samples`;
+}
+function drawCharts() {
+  if (dirty && !paused && $("tel").classList.contains("on")) {
+    dirty = false;
+    const span = +$("window").value;
+    charts.forEach(c => c.draw(samples, span));
+  }
+  requestAnimationFrame(drawCharts);
+}
+$("pause").onclick = () => { paused = !paused; $("pause").textContent = paused ? "Resume" : "Pause"; };
+$("rec").onclick = () => {
+  if (recording) { $("rec").textContent = "Record"; $("csv").disabled = !recording.length; recordingDone = recording; recording = null; return; }
+  recording = []; $("rec").textContent = "Stop recording"; $("csv").disabled = true;
+};
+let recordingDone = null;
+$("csv").onclick = () => {
+  if (!recordingDone || !recordingDone.length) return;
+  const tStart = recordingDone[0][0];
+  const rows = ["t_s," + fields.join(",")].concat(recordingDone.map(([t, s]) => (t - tStart).toFixed(3) + "," + s.join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([rows.join("\n") + "\n"], {type: "text/csv"}));
+  a.download = `${info ? info.name : "rw-1"}-telemetry-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+};
+
+// ---------------- Settings ----------------
+// [name, label, unit, min, max] for the controller board (its ranges aren't sent over the link)
+const LABELS = {
+  wheel_diameter: ["Wheel diameter", "m"], track_width: ["Track width", "m"],
+  wheel_limit_rpm: ["Wheel speed limit", "RPM"], max_accel: ["Acceleration limit", "m/s²"],
+  max_ang_accel: ["Angular acceleration limit", "rad/s²"], drive_period_ms: ["Drive period", "ms"],
+  link_baud: ["Link speed", "baud"], controller_timeout: ["Controller timeout", "s"],
+  client_timeout: ["Client timeout (stop when the page goes quiet)", "s"],
+  max_rpm: ["Wheel RPM at full power", "RPM"], ticks_per_rev: ["Encoder counts per revolution", ""],
+  encoder_divisor: ["Encoder divisor", ""], ff_left: ["Feedforward, left", ""], ff_right: ["Feedforward, right", ""],
+  pid_kp: ["PI gain Kp", ""], pid_ki: ["PI gain Ki", ""], control_period_ms: ["Control period", "ms"],
+  telemetry_every: ["Telemetry every N passes", ""], link_timeout: ["Link timeout", "s"],
+};
+const CTRL_RANGE = {max_rpm: [10, 1000], ff_left: [0, 2], ff_right: [0, 2], pid_kp: [0, 20], pid_ki: [0, 100],
+  telemetry_every: [1, 50], link_timeout: [0.05, 5]};
+const ORDER = Object.keys(LABELS);
+let params = null;
+
+function paramRows(board) {
+  // [{name, value, live, saved, min, max}] in the display order
+  if (board === "wifi_board")
+    return Object.entries(params.wifi_board).map(([name, p]) => ({name, ...p}));
+  const c = params.controller;
+  return Object.entries(c.values).map(([name, value]) => ({name, value, live: c.live.includes(name),
+    saved: c.saved.includes(name), min: (CTRL_RANGE[name] || [])[0], max: (CTRL_RANGE[name] || [])[1]}));
+}
+function renderParams(errors, only) {
+  const rank = (board, name) => board === "controller" && name === "link_baud" ? 99 : ORDER.indexOf(name);
+  for (const [board, table] of [["wifi_board", "setWifi"], ["controller", "setCtrl"]]) {
+    if (only && board !== only) continue;     // keep the other board's unapplied edits
+    const rows = paramRows(board).sort((a, b) => rank(board, a.name) - rank(board, b.name));
+    $(table).innerHTML = rows.map(p => {
+      const [label, unit] = LABELS[p.name] || [p.name, ""];
+      const range = p.min !== undefined ? `${p.min}…${p.max}` : "";
+      const err = errors && errors[p.name] ? ` <span style="color:var(--stop)">${errors[p.name].replace(/_/g, " ")}</span>` : "";
+      return `<tr class="${err ? "err" : ""}" title="${range}"><td>${label}${unit ? ", " + unit : ""}` +
+        `${p.saved ? '<span class="tag">saved</span>' : ""}${err}</td><td>` +
+        (p.live ? `<input type="number" step="any" data-board="${board}" data-name="${p.name}" value="${p.value}"` +
+                  `${p.min !== undefined ? ` min="${p.min}" max="${p.max}"` : ""}>`
+                : `<span class="muted">${p.value}</span>`) + `</td></tr>`;
+    }).join("");
+  }
+  document.querySelectorAll(".set input").forEach(i => i.oninput = () =>
+    i.closest("tr").classList.toggle("changed", i.value !== i.defaultValue));
+}
+async function loadParams() {
+  try { params = await api("/api/params"); renderParams(); $("setText").textContent = ""; }
+  catch (e) { $("setText").textContent = "Couldn't read the settings: " + e.message; }
+}
+function controllerErrors(text) {
+  // "name:code,name:code" from the controller board
+  return Object.fromEntries((text || "").split(",").filter(Boolean).map(s => s.split(":")));
+}
+async function afterParams(result, what, board) {
+  params = result;
+  const errors = Object.assign({}, result.errors || {}, controllerErrors(result.controller.errors));
+  renderParams(errors, board);
+  $("setText").textContent = Object.keys(errors).length ? "Some values were refused (see above)." : what;
+  try { onInfo(await api("/api/info")); } catch (e) {}   // the speed limits may have changed
+}
+document.querySelectorAll("[data-apply]").forEach(b => b.onclick = async () => {
+  const board = b.dataset.apply, values = {};
+  document.querySelectorAll(`.set input[data-board="${board}"]`).forEach(i => {
+    if (i.value !== i.defaultValue) values[i.dataset.name] = +i.value;
+  });
+  if (!Object.keys(values).length) { $("setText").textContent = "Nothing changed."; return; }
+  try { await afterParams(await api("/api/params", {[board]: values}), "Applied. Press Save to keep the values after a restart.", board); }
+  catch (e) { $("setText").textContent = "Error: " + e.message; }
+});
+document.querySelectorAll("[data-save]").forEach(b => b.onclick = async () => {
+  try { await afterParams(await api("/api/params/save", {board: b.dataset.save}), "Saved on the board.", b.dataset.save); }
+  catch (e) { $("setText").textContent = "Error: " + e.message; }
+});
+document.querySelectorAll("[data-reset]").forEach(b => b.onclick = async () => {
+  if (!confirm("Go back to the values in settings.toml? Saved values on this board are removed.")) return;
+  try { await afterParams(await api("/api/params/reset", {board: b.dataset.reset}), "Back to settings.toml.", b.dataset.reset); }
+  catch (e) { $("setText").textContent = "Error: " + e.message; }
+});
+
+// ---------------- Network ----------------
+function showNetState(w) {
+  const c = w.client, rows = [
+    ["Access point", `${w.ap.ssid} — http://${w.ap.ip}${w.ap.default_password ? " (default password)" : ""}`],
+    ["Home network", c.ssid ? `${c.ssid}: ${c.state}${c.ip ? ` — http://${c.ip}` : ""}${c.rssi ? ` (${c.rssi} dBm)` : ""}` : "not set up"],
+    ["Name", `http://${w.hostname} (not on every phone)`],
+  ];
+  $("netState").innerHTML = rows.map(r => `<tr><td class="muted">${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+  if (document.activeElement !== $("apSsid")) $("apSsid").value = w.ap.ssid;
+  if (document.activeElement !== $("robotName")) $("robotName").placeholder = w.name;
+  // QR: the home network address if there is one, else the access point's
+  const url = c.ip ? `http://${c.ip}/` : `http://${w.ap.ip}/`;
+  drawQr(url);
+  $("qrText").textContent = c.ip ? `${url} — the phone must be on ${c.ssid}.`
+                                 : `${url} — join the ${w.ap.ssid} network first.`;
+}
+async function loadWifi() {
+  try { const w = await api("/api/wifi"); if (info) info.wifi = w; showNetState(w); } catch (e) {}
+}
+function restarting(text) {
+  say(text, true); $("netText").textContent = text;
+  // Reload when the robot answers again (it restarts in a few seconds)
+  setTimeout(function poll() {
+    fetch("/api/info", {cache: "no-store"}).then(r => r.ok ? location.reload() : setTimeout(poll, 2000))
+      .catch(() => setTimeout(poll, 2000));
+  }, 4000);
+}
+$("scan").onclick = async () => {
+  $("scanText").textContent = "Scanning (a few seconds)…"; $("nets").innerHTML = "";
+  try {
+    const r = await api("/api/wifi/scan", {});
+    $("scanText").textContent = r.networks.length ? "Pick your network:" : "No networks found.";
+    $("nets").innerHTML = r.networks.map(n =>
+      `<button data-ssid="${encodeURIComponent(n.ssid)}"><span>${n.open ? "" : "🔒 "}${escapeHtml(n.ssid)}</span>` +
+      `<span class="muted">${n.rssi} dBm, ch ${n.channel}</span></button>`).join("");
+    $("nets").querySelectorAll("button").forEach(b => b.onclick = () => {
+      $("ssid").value = decodeURIComponent(b.dataset.ssid); $("pass").focus();
+    });
+  } catch (e) { $("scanText").textContent = "Scan failed: " + e.message; }
+};
+function escapeHtml(s) { return s.replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]); }
+function showTest(t) {
+  if (!t || !t.ssid) { $("clientText").textContent = "No test yet."; return; }
+  $("clientText").textContent = t.ok ? `${t.ssid}: connected, address ${t.ip}. Press Save and restart to keep it.`
+                                     : `${t.ssid}: ${t.error}`;
+}
+$("test").onclick = async () => {
+  if (!$("ssid").value) { $("clientText").textContent = "Enter the network name."; return; }
+  $("clientText").textContent = "Testing (up to 15 s)…";
+  try { showTest(await api("/api/wifi/test", {ssid: $("ssid").value, password: $("pass").value})); }
+  catch (e) { $("clientText").textContent = "The page lost the robot during the test. Reconnect to it, then press Show last test result."; }
+};
+$("lastTest").onclick = async () => { try { showTest((await api("/api/wifi")).last_test); } catch (e) {} };
+$("saveClient").onclick = async () => {
+  if (!$("ssid").value) { $("clientText").textContent = "Enter the network name."; return; }
+  try {
+    await api("/api/wifi/client", {ssid: $("ssid").value, password: $("pass").value});
+    restarting(`Saved. The robot restarts and joins ${$("ssid").value}; the access point stays on.`);
+  } catch (e) { $("clientText").textContent = "Error: " + e.message; }
+};
+$("reconnect").onclick = async () => {
+  $("clientText").textContent = "Connecting…";
+  try { showNetState(await api("/api/wifi/reconnect", {})); $("clientText").textContent = "Connected."; }
+  catch (e) { $("clientText").textContent = "Error: " + e.message; }
+};
+$("saveAp").onclick = async () => {
+  try {
+    await api("/api/wifi/ap", {ssid: $("apSsid").value, password: $("apPass").value});
+    restarting(`Saved. The robot restarts; join ${$("apSsid").value} with the new password.`);
+  } catch (e) { $("netText").textContent = "Error: " + e.message; }
+};
+$("saveName").onclick = async () => {
+  const n = $("robotName").value.trim();
+  try { await api("/api/wifi/name", {name: n}); restarting(`Saved. The robot restarts as http://${n.toLowerCase()}.local`); }
+  catch (e) { $("netText").textContent = "Error: " + e.message; }
+};
+$("forget").onclick = async () => {
+  if (!confirm("Forget the home network, the access point name and password, and the robot's name?")) return;
+  try { await api("/api/wifi/forget", {}); restarting("Forgotten. The robot restarts with the access point only."); }
+  catch (e) { $("netText").textContent = "Error: " + e.message; }
+};
+
+// QR code: byte mode, error correction level L, versions 1-9
+function qrEncode(text) {
+  const data = Array.from(new TextEncoder().encode(text));
+  const T = [0, [26, 7, 1], [44, 10, 1], [70, 15, 1], [100, 20, 1], [134, 26, 1],
+             [172, 18, 2], [196, 20, 2], [242, 24, 2], [292, 30, 2]];
+  const ALIGN = [0, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46]];
+  let ver = 1;
+  while (ver <= 9 && (T[ver][0] - T[ver][1] * T[ver][2]) < data.length + 2) ver++;
+  if (ver > 9) return null;
+  const [total, ecLen, blocks] = T[ver], dataLen = total - ecLen * blocks;
+  const bits = [], put = (v, n) => { for (let i = n - 1; i >= 0; i--) bits.push((v >> i) & 1); };
+  put(4, 4); put(data.length, 8); data.forEach(b => put(b, 8));
+  put(0, Math.min(4, dataLen * 8 - bits.length));
+  while (bits.length % 8) bits.push(0);
+  const cw = [];
+  for (let i = 0; i < bits.length; i += 8) cw.push(parseInt(bits.slice(i, i + 8).join(""), 2));
+  for (let p = 0; cw.length < dataLen; p ^= 1) cw.push(p ? 0x11 : 0xEC);
+  const EXP = new Array(512), LOG = new Array(256);
+  for (let i = 0, x = 1; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 256) x ^= 0x11D; }
+  for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  const mul = (a, b) => (a && b) ? EXP[LOG[a] + LOG[b]] : 0;
+  let gen = [1];
+  for (let i = 0; i < ecLen; i++) {
+    const next = new Array(gen.length + 1).fill(0);
+    gen.forEach((g, j) => { next[j] ^= g; next[j + 1] ^= mul(g, EXP[i]); });
+    gen = next;
+  }
+  const per = dataLen / blocks, dB = [], eB = [];
+  for (let b = 0; b < blocks; b++) {
+    const d = cw.slice(b * per, (b + 1) * per), r = d.concat(new Array(ecLen).fill(0));
+    for (let i = 0; i < d.length; i++) { const f = r[i]; if (f) gen.forEach((g, j) => { r[i + j] ^= mul(g, f); }); }
+    dB.push(d); eB.push(r.slice(d.length));
+  }
+  const all = [];
+  for (let i = 0; i < per; i++) dB.forEach(d => all.push(d[i]));
+  for (let i = 0; i < ecLen; i++) eB.forEach(e => all.push(e[i]));
+  const n = 17 + ver * 4, m = Array.from({length: n}, () => new Array(n).fill(null));
+  const finder = (r, c) => {
+    for (let y = -1; y <= 7; y++) for (let x = -1; x <= 7; x++) {
+      if (r + y < 0 || r + y >= n || c + x < 0 || c + x >= n) continue;
+      m[r + y][c + x] = (y >= 0 && y <= 6 && x >= 0 && x <= 6 &&
+        (y === 0 || y === 6 || x === 0 || x === 6 || (y >= 2 && y <= 4 && x >= 2 && x <= 4))) ? 1 : 0;
+    }
+  };
+  finder(0, 0); finder(0, n - 7); finder(n - 7, 0);
+  const al = ALIGN[ver];
+  al.forEach(r => al.forEach(c => {
+    if (m[r][c] !== null) return;
+    for (let y = -2; y <= 2; y++) for (let x = -2; x <= 2; x++) m[r + y][c + x] = Math.max(Math.abs(x), Math.abs(y)) !== 1 ? 1 : 0;
+  }));
+  for (let i = 8; i < n - 8; i++) {
+    if (m[6][i] === null) m[6][i] = (i + 1) % 2;
+    if (m[i][6] === null) m[i][6] = (i + 1) % 2;
+  }
+  for (let i = 0; i < 9; i++) { if (m[8][i] === null) m[8][i] = 0; if (m[i][8] === null) m[i][8] = 0; }
+  for (let i = 0; i < 8; i++) { m[8][n - 1 - i] = 0; m[n - 1 - i][8] = 0; }
+  m[n - 8][8] = 1;
+  if (ver >= 7) {
+    let v = ver << 12;
+    for (let i = 17; i >= 12; i--) if (v & (1 << i)) v ^= 0x1F25 << (i - 12);
+    v = (ver << 12) | v;
+    for (let i = 0; i < 18; i++) { const bit = (v >> i) & 1, a = Math.floor(i / 3), b = n - 11 + (i % 3); m[a][b] = bit; m[b][a] = bit; }
+  }
+  const fixed = m.map(row => row.map(v => v !== null));
+  let k = 0;
+  for (let c = n - 1; c > 0; c -= 2) {
+    if (c === 6) c--;
+    for (let j = 0; j < n; j++) {
+      const r = ((c + 1) & 2) === 0 ? n - 1 - j : j;
+      for (let d = 0; d < 2; d++) {
+        if (fixed[r][c - d]) continue;
+        m[r][c - d] = k < all.length * 8 ? (all[k >> 3] >> (7 - (k & 7))) & 1 : 0;
+        k++;
+      }
+    }
+  }
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (!fixed[r][c] && (r + c) % 2 === 0) m[r][c] ^= 1;
+  let f = 8 << 10;
+  for (let i = 14; i >= 10; i--) if (f & (1 << i)) f ^= 0x537 << (i - 10);
+  f = ((8 << 10) | f) ^ 0x5412;
+  const fb = i => (f >> i) & 1;
+  for (let i = 0; i <= 5; i++) m[i][8] = fb(i);
+  m[7][8] = fb(6); m[8][8] = fb(7); m[8][7] = fb(8);
+  for (let i = 9; i < 15; i++) m[8][14 - i] = fb(i);
+  for (let i = 0; i < 8; i++) m[8][n - 1 - i] = fb(i);
+  for (let i = 8; i < 15; i++) m[n - 15 + i][8] = fb(i);
+  m[n - 8][8] = 1;
+  return m;
+}
+function drawQr(text) {
+  const m = qrEncode(text), cv = $("qr");
+  if (!m) return;
+  const n = m.length, q = n + 8;               // 4 modules of quiet zone on each side
+  cv.width = cv.height = q; cv.style.padding = "0";
+  const c = cv.getContext("2d");
+  c.fillStyle = "#fff"; c.fillRect(0, 0, q, q); c.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let x = 0; x < n; x++) if (m[r][x]) c.fillRect(x + 4, r + 4, 1, 1);
+}
+
+// ---------------- Start ----------------
+drawPad(); connect(); requestAnimationFrame(drawCharts); gamepadHelp(); gamepadLoop();
+</script>
+</body>
+</html>

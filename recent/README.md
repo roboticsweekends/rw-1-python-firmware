@@ -167,7 +167,8 @@ The web page and PC programs use the same API, described at the top of
 Safety rules: no drive request for `CLIENT_TIMEOUT` = the robot stops with
 its acceleration limits; STOP stops at once and is latched until the same
 client sends v = 0 and w = 0 (another client can't end it, unless the one
-that pressed STOP has disconnected); at most 2 WebSocket clients, the oldest is dropped for
+that pressed STOP has disconnected; a STOP sent over plain HTTP can be
+ended by any client); at most 2 WebSocket clients, the oldest is dropped for
 a third; a client silent for 10 s is dropped.
 
 ## Usage

@@ -14,7 +14,8 @@ to do, and the safety rules around it.
   client that pressed STOP asks for v = w = 0 (its joystick back in the
   middle), so the robot can't jump off again by itself. Another client
   (a PC script, a second phone) can't end someone else's STOP, unless that
-  client has disconnected.
+  client has disconnected. A STOP sent over plain HTTP (/api/stop) has no
+  client name, so any client can end it.
 """
 import time
 
@@ -76,7 +77,9 @@ class Remote:
         self.v = 0.0
         self.w = 0.0
         self.latched = True
-        if source not in self.latched_by:
+        # "http" is not one client: if it owned the STOP, a page that sent
+        # STOP over HTTP (its WebSocket was down) could never end it
+        if source != "http" and source not in self.latched_by:
             self.latched_by.append(source)
         self.source = source
         self._last = time.monotonic_ns()

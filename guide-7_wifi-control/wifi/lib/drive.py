@@ -102,6 +102,10 @@ class Drive:
         # Send: the targets also tell the controller board we're still here
         ctrl.send_targets(self.target_left, self.target_right)
 
+    def moving(self):
+        """True while the robot drives or is still slowing down to a stop."""
+        return self.v_cmd != 0.0 or self.w_cmd != 0.0
+
     def stop(self):
         """Stop at once, without the ramp (emergency stop)."""
         self.controller.stop()

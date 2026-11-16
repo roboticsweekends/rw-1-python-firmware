@@ -28,7 +28,7 @@ _FIELDS = (
     ("ROBOT_PID_KP",          "pid_kp",          0.6,    float, 0.0,  20.0,   True),
     ("ROBOT_PID_KI",          "pid_ki",          3.0,    float, 0.0,  100.0,  True),
     ("CONTROL_PERIOD_MS",     "control_period_ms", 20,   int,   2,    100,    False),  # control loop period
-    ("TELEMETRY_EVERY",       "telemetry_every", 1,      int,   1,    50,     True),   # send telemetry every N passes
+    ("TELEMETRY_EVERY",       "telemetry_every", 1,      int,   1,    10,     True),   # send telemetry every N passes (x period: < CONTROLLER_TIMEOUT)
     ("LINK_BAUD",             "link_baud",       921600, int,   9600, 3000000, False), # serial link speed, both boards
     ("LINK_TIMEOUT",          "link_timeout",    0.3,    float, 0.05, 5.0,    True),   # stop if no targets for this long, s
 )

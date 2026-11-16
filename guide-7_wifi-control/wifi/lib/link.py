@@ -15,7 +15,7 @@ Every message travels as one frame:
   checksum - (type + length + sum of the payload bytes) & 0xFF
 
 The two messages sent on every control pass, wheel targets and telemetry,
-are packed as binary numbers with ``struct``: they are short (8 and 25 bytes
+are packed as binary numbers with ``struct``: they are short (8 and 26 bytes
 per frame) and cost one call to pack or unpack. Rare messages (parameters,
 events) are TEXT frames with readable "key=value" pairs.
 
@@ -128,7 +128,11 @@ def pack_text(pairs):
 def unpack_text(payload):
     """Turn "key=value key=value" bytes back into a dict of strings."""
     pairs = {}
-    for item in payload.decode().split():
+    try:
+        text = payload.decode()
+    except UnicodeError:   # damaged bytes that passed the checksum: ignore
+        return pairs
+    for item in text.split():
         key, _, value = item.partition("=")
         pairs[key] = value
     return pairs

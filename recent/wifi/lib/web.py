@@ -11,7 +11,7 @@ HTTP (JSON in and out):
   GET  /api/info            robot name, firmware, Wi-Fi, controller link, speed limits
   GET  /api/telemetry       newest telemetry sample
   POST /api/drive           {"v": m/s, "w": rad/s}: same rules as the WebSocket "drive"
-  POST /api/stop            stop at once (latched until a v=0, w=0 request from the same client)
+  POST /api/stop            stop at once (latched until a v=0, w=0 request; from any client, as HTTP has no client name)
   GET  /api/params          settings of both boards
   POST /api/params          {"wifi_board": {name: value}, "controller": {name: value}}
   POST /api/params/save     {"board": "wifi_board" | "controller" | "both"}
@@ -153,7 +153,9 @@ class WebApp:
         self._next_state = 0
 
         self.server = Server(pool, WWW, debug=False)
-        self.server.socket_timeout = 0.5
+        # Short: while a request is read, no wheel targets go out, and the
+        # controller board stops the motors after LINK_TIMEOUT (0.3 s)
+        self.server.socket_timeout = 0.1
         self._add_routes()
         controller.on_telemetry = self._on_telemetry
 
@@ -167,8 +169,8 @@ class WebApp:
         """Handle one HTTP request (if any) and all WebSocket messages."""
         try:
             self.server.poll()
-        except OSError as error:
-            print("HTTP error:", error)
+        except Exception as error:   # a bad request must never stop the robot's loop
+            print("HTTP error:", repr(error))
         for client in list(self.clients):
             self._poll_client(client)
 
@@ -263,7 +265,7 @@ class WebApp:
         if len(self.clients) >= MAX_CLIENTS:
             oldest = self.clients.pop(0)
             self._send(oldest, {"t": "error", "text": "another client connected"})
-            oldest.ws.close()
+            self._drop(oldest)   # closes it; anyone can now end its STOP
         self.clients.append(Client(ws))
 
     def _send(self, client, message):
@@ -452,13 +454,13 @@ class WebApp:
 
         @server.route("/api/wifi/scan", POST)
         def wifi_scan(request):
-            if self.remote.active():
+            if self.remote.active() or self.drive.moving():
                 return _bad(request, "stop driving first")
             return JSONResponse(request, {"networks": self.wifi.scan()})
 
         @server.route("/api/wifi/test", POST)
         def wifi_test(request):
-            if self.remote.active():
+            if self.remote.active() or self.drive.moving():
                 return _bad(request, "stop driving first")
             body = _body(request)
             if not body.get("ssid"):
@@ -493,7 +495,7 @@ class WebApp:
 
         @server.route("/api/wifi/reconnect", POST)
         def wifi_reconnect(request):
-            if self.remote.active():
+            if self.remote.active() or self.drive.moving():
                 return _bad(request, "stop driving first")
             error = self.wifi.reconnect()
             if error:

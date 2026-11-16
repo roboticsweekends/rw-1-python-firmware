@@ -105,7 +105,7 @@ def main():
             web.send_updates()
 
             # Wi-Fi
-            net.update(busy=remote.active())
+            net.update(busy=remote.active() or drive.moving())
 
             # Restart after a Wi-Fi settings change (the response was sent already)
             if web.reboot_at is not None and now >= web.reboot_at:

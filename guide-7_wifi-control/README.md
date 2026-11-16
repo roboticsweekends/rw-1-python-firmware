@@ -27,9 +27,6 @@ settings, Wi-Fi set-up) and a JSON + WebSocket API.
   `settings.toml`. The robot is then also at `http://rw-1.local` (not on
   every Android phone) and at the address the router gives it. The access
   point keeps running, on the home network's channel.
-- **Home network gone:** after 30 s the robot stops looking for it (looking
-  disturbs the access point) and tries again every 5 minutes while it isn't
-  driven, or when asked through `/api/wifi/reconnect`.
 - **Forgetting Wi-Fi settings:** press BOOT in the first 3 s after
   power-up (right after, not before: holding BOOT while powering up starts
   the ESP32 bootloader instead). The console prints
@@ -54,17 +51,6 @@ client sends v = 0 and w = 0 (another client can't end it, unless the one
 that pressed STOP has disconnected; a STOP sent over plain HTTP can be
 ended by any client); at most 2 WebSocket clients, the oldest is dropped for
 a third; a client silent for 10 s is dropped.
-
-## Usage
-
-1. Put the robot on blocks. Copy `controller/` to the controller board's
-   CIRCUITPY drive and `wifi/` to the Wi-Fi board's, plus
-   `lib/adafruit_httpserver/` from the library bundle. Keep your own
-   `settings.toml` values and `lib/pins.py` from guide 6.
-2. On the Wi-Fi board, run `check_link.py` from the REPL: every line should
-   say `OK`.
-3. Restart the Wi-Fi board, join its network `RW-1-XXXX` from a phone and
-   open `http://192.168.4.1`.
 
 ## Web page
 

@@ -1,0 +1,31 @@
+# RW-1 controller board configuration, read by lib/config.py on boot.
+# Float values MUST be quoted; CircuitPython only supports strings and ints here.
+# Values saved from the web page (stored in the board's NVM) win over these
+# until you press "Reset" there.
+
+# Encoder: counts per wheel revolution with the divisor below
+ROBOT_ENCODER_DIVISOR=1
+ROBOT_TICKS_PER_REV=1975
+
+# Wheel RPM at full PWM (from guide 5's pwm_to_speed.py)
+ROBOT_MAX_RPM="191.8"
+
+# Feedforward correction per motor (from guide 5's pwm_to_speed.py, about 80% of the exact value)
+ROBOT_FF_LEFT="0.784"
+ROBOT_FF_RIGHT="0.769"
+
+# Speed controller gains
+ROBOT_PID_KP="0.6"
+ROBOT_PID_KI="3.0"
+
+# Control loop period in ms (20 ms = 50 passes per second)
+CONTROL_PERIOD_MS=20
+
+# Send telemetry to the Wi-Fi board every N passes (1 = every pass)
+TELEMETRY_EVERY=1
+
+# Serial link to the Wi-Fi board: must be the same on both boards
+LINK_BAUD=921600
+
+# Stop the motors if the Wi-Fi board sends no wheel targets for this long, seconds
+LINK_TIMEOUT="0.3"

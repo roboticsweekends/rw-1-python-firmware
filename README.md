@@ -25,7 +25,8 @@ latest firmware.
 | [`guide-5_closed-loop/`](guide-5_closed-loop/) | 5 | Encoder check, calibration scripts and closed-loop (feedforward + PI) wheel speed control | [Link](https://www.patreon.com/RoboticsWeekends/posts) |
 | [`guide-6_kinematics/`](guide-6_kinematics/) | 6 | Differential drive kinematics: drive by linear and angular speed, wheel and track calibration scripts, rectangle test | [Link](https://www.patreon.com/RoboticsWeekends/posts/6-rw-1-robot-175028720) |
 | [`guide-7_wifi-control/`](guide-7_wifi-control/) | 7 | Wireless control: ESP32-S3 Wi-Fi board, serial link, web page (drive, telemetry, settings, Wi-Fi set-up), JSON/WebSocket API | [Link](https://www.patreon.com/cw/RoboticsWeekends/posts) |
-| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-7_wifi-control/` | |
+| [`guide-8_pc-control/`](guide-8_pc-control/) | 8 | PC control and code updates over Wi-Fi: Python scripts for the PC, Update tab | [Link](https://www.patreon.com/cw/RoboticsWeekends/posts) |
+| [`recent/`](recent/) | latest | The final state of the firmware, currently the same as `guide-8_pc-control/` | |
 
 - `guide-N_<topic>/` folders hold the code developed in guide N. They are
   snapshots: they don't change when later guides add new features.
@@ -42,6 +43,8 @@ Guides without a folder cover mechanics and electronics only.
    copy **its contents** to the root of the CIRCUITPY drive, replacing what is
    there. From guide 7 on there are two boards: copy `controller/` to the
    controller board and `wifi/` to the Wi-Fi board (see the folder's README).
+   From guide 8 on, code changes can also go over Wi-Fi from the robot's web
+   page.
 3. The board restarts and runs `code.py`. Open the serial console (for example
    in Thonny) to see its output.
 

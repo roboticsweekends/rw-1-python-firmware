@@ -1,21 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Differential drive kinematics. Pure math, no hardware.
-
-Conventions (the same as in the blog post):
-  v - linear speed of the robot's center, m/s, positive = forward
-  w - angular speed (omega), rad/s, positive = turning left (counter-clockwise)
-  L - track width: distance between the wheel centers, m
-  D - wheel diameter, m
-
-Inverse kinematics, from (v, w) to wheel speeds:
-    v_left  = v - w * L / 2
-    v_right = v + w * L / 2
-
-Forward kinematics, from wheel speeds to (v, w):
-    v = (v_right + v_left) / 2
-    w = (v_right - v_left) / L
+Differential drive kinematics: (v, w) <-> wheel speeds. Pure math.
 """
 import math
 

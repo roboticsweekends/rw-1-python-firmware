@@ -1,38 +1,31 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-RW-1 controller board: hold the wheel speeds the Wi-Fi board asks for.
-
-From guide 7 the robot is driven through the Wi-Fi board. It runs the
-kinematics from guide 6 and sends left and right wheel targets (RPM) over
-the serial link (lib/link.py) on every one of its passes. This board keeps
-the wheel speed control from guide 5 (lib/wheels.py) and sends back what it
-measured.
-
-One pass of the loop, every CONTROL_PERIOD_MS:
-
-  Read      - take the frames that arrived: wheel targets, stop, settings
-  Watchdog  - no targets for LINK_TIMEOUT seconds -> stop the motors
-  Control   - measure, compare and correct, drive (lib/wheels.py)
-  Report    - send one telemetry frame to the Wi-Fi board
+RW-1 controller board: hold the wheel speeds the Wi-Fi board asks for over
+the serial link and send back telemetry. Stops the motors when the link goes
+quiet. Runs lib/updater.py instead during a code update.
 """
 import time
 
 import busio
+import microcontroller
 
 import link
 import pins
+import updater
+import updates
 from config import RobotConfig
 from ticker import Ticker
 from wheels import Wheels
 
-FIRMWARE = "guide-7"
+FIRMWARE = "guide-8"
 NS_PER_MS = 1_000_000
 
 
 def send_hello(cfg, lnk):
-    """Introduce this board to the Wi-Fi board."""
-    lnk.send_text({"cmd": "hello", "fw": FIRMWARE, "period_ms": cfg.control_period_ms})
+    """Introduce this board. boot=1: boot.py is there, so code updates over Wi-Fi work."""
+    lnk.send_text({"cmd": "hello", "fw": FIRMWARE, "period_ms": cfg.control_period_ms,
+                   "boot": 1 if updates.exists("boot.py") else 0})
 
 
 def handle_text(pairs, cfg, wheels, lnk):
@@ -41,6 +34,13 @@ def handle_text(pairs, cfg, wheels, lnk):
     if cmd == "hello":
         send_hello(cfg, lnk)
         return
+    if cmd == "update":
+        # Restart into the updater (boot.py makes the drive writable)
+        wheels.stop()
+        print("Code update: restarting into the updater")
+        updates.request()
+        time.sleep(0.05)
+        microcontroller.reset()
 
     reply = {"cmd": "params"}
     if cmd == "set":
@@ -80,6 +80,8 @@ def main():
     uart = busio.UART(pins.LINK_TX, pins.LINK_RX, baudrate=cfg.link_baud,
                       timeout=0, receiver_buffer_size=1024)
     lnk = link.Link(uart)
+    if updates.take():
+        updater.run(lnk)          # never returns: resets when done
     wheels = Wheels(cfg)
     ticker = Ticker(cfg.control_period_ms * NS_PER_MS)
 

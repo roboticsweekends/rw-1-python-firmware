@@ -1,45 +1,14 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-The robot's web server: the web page, the JSON API and the WebSocket.
-
-The same API is used by the web page and by programs on the PC.
-
-HTTP (JSON in and out):
-
-  GET  /                    the web page (www/index.html)
-  GET  /api/info            robot name, firmware, Wi-Fi, controller link, speed limits
-  GET  /api/telemetry       newest telemetry sample
-  POST /api/drive           {"v": m/s, "w": rad/s}: same rules as the WebSocket "drive"
-  POST /api/stop            stop at once (latched until a v=0, w=0 request; from any client, as HTTP has no client name)
-  GET  /api/params          settings of both boards
-  POST /api/params          {"wifi_board": {name: value}, "controller": {name: value}}
-  POST /api/params/save     {"board": "wifi_board" | "controller" | "both"}
-  POST /api/params/reset    same; back to settings.toml
-  GET  /api/wifi            Wi-Fi state
-  POST /api/wifi/scan       networks in range (only while the robot isn't driven)
-  POST /api/wifi/test       {"ssid", "password"}: try a home network without saving it
-  POST /api/wifi/client     {"ssid", "password"}: save the home network and restart
-  POST /api/wifi/ap         {"ssid", "password"}: save the access point and restart
-  POST /api/wifi/name       {"name"}: save the robot's name and restart
-  POST /api/wifi/reconnect  try the home network again now
-  POST /api/wifi/forget     forget the saved Wi-Fi settings and restart
-
-WebSocket /ws (JSON text messages):
-
-  to the robot:   {"t": "drive", "v": 0.2, "w": 0.0}   send 10-20 times a second while driving
-                  {"t": "stop"}
-                  {"t": "ping"}                         keeps an idle connection open
-  from the robot: {"t": "hello", "fields": [...], ...}  once, after connecting
-                  {"t": "tel", "s": [[...], ...]}       telemetry, every 100 ms (5 samples)
-                  {"t": "state", ...}                   once a second
-                  {"t": "pong"}, {"t": "error", "text": "..."}
-
-A client that sends nothing for CLIENT_IDLE_S seconds is disconnected.
+The robot's web server: the web page, the JSON API and the WebSocket used
+by the page and by PC programs.
 """
 import errno
 import json
 import time
+
+import updates
 
 from adafruit_httpserver import (
     BAD_REQUEST_400,
@@ -51,9 +20,10 @@ from adafruit_httpserver import (
     Websocket,
 )
 
-FIRMWARE = "guide-7"
+FIRMWARE = "guide-8"
 WWW = "/www"
 MAX_CLIENTS = 2             # WebSocket connections at once
+MAX_PENDING = 200_000       # bytes of controller files kept in memory for an update
 CLIENT_IDLE_S = 10          # disconnect a WebSocket client silent for this long
 TELEMETRY_PERIOD_S = 0.1    # how often telemetry is sent to WebSocket clients
 STATE_PERIOD_S = 1.0
@@ -148,6 +118,9 @@ class WebApp:
         self.samples = []            # telemetry not sent yet
         self.latest = None           # newest telemetry sample
         self.reboot_at = None        # time.monotonic_ns() to restart at, after a Wi-Fi change
+        self.pending = {}            # controller board files for an update: {name: bytes}
+        self.update_now = False      # code.py runs the controller update when True
+        self.update_result = {"state": "idle"}
         self._start_ns = time.monotonic_ns()
         self._next_tel = 0
         self._next_state = 0
@@ -508,3 +481,55 @@ class WebApp:
             self._restart_soon()
             return JSONResponse(request, {"ok": True, "restarting": True})
 
+        @server.route("/api/update/status", GET)
+        def update_status(request):
+            return JSONResponse(request, {
+                "mode": "normal", "pending": sorted(self.pending),
+                "controller": self.update_result,
+                # boot.py is needed on a board for code updates over Wi-Fi
+                "boot_py": {"wifi_board": updates.exists("boot.py"),
+                            "controller": self.controller.can_update}})
+
+        @server.route("/api/update/file", POST)
+        def update_file(request):
+            name = request.query_params.get("name", "")
+            problem = updates.check_name(name)
+            if problem:
+                return _bad(request, "{}: {}".format(name, problem))
+            data = request.body
+            try:
+                size = int(request.query_params.get("size", "-1"))
+            except ValueError:
+                size = -1
+            if size != len(data):
+                return _bad(request, "{}: got {} of {} bytes, send it again".format(name, len(data), size))
+            if size > updates.MAX_FILE:
+                return _bad(request, "{}: too big".format(name))
+            total = sum(len(d) for n, d in self.pending.items() if n != name) + size
+            if total > MAX_PENDING:
+                return _bad(request, "too many files for one update")
+            self.pending[name] = bytes(data)
+            return JSONResponse(request, {"ok": True, "pending": sorted(self.pending)})
+
+        @server.route("/api/update/clear", POST)
+        def update_clear(request):
+            self.pending = {}
+            return JSONResponse(request, {"ok": True})
+
+        @server.route("/api/update/controller", POST)
+        def update_controller(request):
+            if self.remote.active() or self.drive.moving():
+                return _bad(request, "stop driving first")
+            if not self.pending:
+                return _bad(request, "no files uploaded")
+            self.update_now = True
+            self.update_result = {"state": "running", "files": sorted(self.pending)}
+            return JSONResponse(request, {"ok": True, "files": sorted(self.pending)})
+
+        @server.route("/api/update/wifi_board", POST)
+        def update_wifi_board(request):
+            if self.remote.active() or self.drive.moving():
+                return _bad(request, "stop driving first")
+            updates.request()
+            self._restart_soon()
+            return JSONResponse(request, {"ok": True, "restarting": True})

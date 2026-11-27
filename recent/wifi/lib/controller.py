@@ -46,6 +46,7 @@ class Controller:
         self.params_errors = ""      # errors from the last "set", "" if none
         self.params_version = 0      # +1 every time new params arrive
         self.firmware = None         # from its "hello"
+        self.can_update = False      # its boot.py is there (code updates over Wi-Fi)
         self.timeouts = 0            # how many times it stopped on a link timeout
 
     # --- link state ----------------------------------------------------------
@@ -96,6 +97,7 @@ class Controller:
         if cmd == "hello":
             # The controller board (re)started: read its settings again
             self.firmware = pairs.get("fw")
+            self.can_update = pairs.get("boot") == "1"
             self.request_params()
         elif cmd == "params":
             # Long messages come in parts; all but the last say more=1

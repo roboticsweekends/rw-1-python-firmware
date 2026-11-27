@@ -1,16 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Drive RW-1 by body speed: linear speed v (m/s) and angular speed w (rad/s).
-
-This is guide 6's lib/drive.py, moved to the Wi-Fi board. The wheel speed
-control (feedforward + PI) stays on the controller board, so one call to
-Drive.update() now does:
-
-  Measure  - wheel RPM from the controller's telemetry -> forward kinematics -> measured v, w
-  Ramp     - move the commanded v, w toward the request, within the acceleration limits
-  Convert  - inverse kinematics -> wheel RPM targets, scaled down to the wheel speed limit
-  Send     - send the targets to the controller board, which compares, corrects and drives
+Drive by body speed v (m/s) and w (rad/s): ramp, kinematics and wheel
+targets for the controller board (guide 6's drive, on the Wi-Fi board).
 """
 import math
 

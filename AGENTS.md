@@ -36,7 +36,8 @@ Current folders:
 | `guide-5_closed-loop/` | 5 | Encoders, calibration scripts, feedforward + PI wheel speed control |
 | `guide-6_kinematics/` | 6 | Differential drive kinematics: body speed (v, w) control, wheel and track calibration, rectangle test |
 | `guide-7_wifi-control/` | 7 | Wi-Fi board: serial link, web server, web page, JSON/WebSocket API |
-| `recent/` | latest | Same code as `guide-7_wifi-control/` |
+| `guide-8_pc-control/` | 8 | PC scripts (`pc/`), code updates over Wi-Fi (`boot.py`, Update tab) |
+| `recent/` | latest | Same code as `guide-8_pc-control/` |
 
 Guides that only cover mechanics or electronics have no folder.
 
@@ -45,17 +46,21 @@ contents are copied as-is to the root of the board's CIRCUITPY drive.
 `code.py` runs on boot, `lib/` holds the modules it imports, and
 `settings.toml` holds the robot's tunable parameters.
 
-From guide 7 on, a guide folder holds one image per board:
+From guide 7 on, a guide folder holds one image per board, and from guide 8
+on also PC scripts:
 
 ```
-guide-7_wifi-control/
+guide-8_pc-control/
   controller/   CIRCUITPY image for the controller board (Motion 2350 Pro)
   wifi/         CIRCUITPY image for the Wi-Fi board (ESP32-S3-Zero)
+  pc/           Python scripts that run on the PC
   README.md
 ```
 
-`lib/link.py` and `lib/store.py` are the same file in `controller/` and
-`wifi/`: change both together.
+`lib/link.py` and `lib/store.py` (and from guide 8 `lib/updates.py` and
+`boot.py`) are the same file in `controller/` and `wifi/`: change both
+together. Guide 7 is guide 8 without `pc/` and the code-update files and
+routes: a fix to shared code goes into both folders and `recent/`.
 `wifi/lib/adafruit_httpserver/` is not in the repo (readers copy it from the
 Adafruit library bundle).
 
@@ -104,12 +109,15 @@ Adafruit library bundle).
 - Code is read by guide readers, many of them beginners: prefer plain, short,
   well-commented code over clever abstractions.
 - Wi-Fi board: no `asyncio`, a plain loop that never sleeps (`ticker.due()`);
-  anything slow (scans, connecting) is refused while the robot is
+  anything slow (scans, connecting, updates) is refused while the robot is
   driven. The web page `wifi/www/index.html` is one self-contained file with
   no internet resources (it must work on the robot's own access point).
+- `pc/` scripts run on desktop Python 3.8+ with the standard library only (no
+  pip packages), so readers can run them right away.
 - Safety rules that must survive changes: the client timeout (the robot stops
   when drive requests stop), the controller's link timeout, the STOP latch
-  (only the client that pressed STOP ends it).
+  (only the client that pressed STOP ends it), and `boot.py` never being
+  replaced over Wi-Fi.
 
 ## Testing
 

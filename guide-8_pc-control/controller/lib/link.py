@@ -1,26 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-The serial link between the controller board and the Wi-Fi board.
-
-The same file is used on both boards.
-
-Every message travels as one frame:
-
-    0xA5 | type | length | payload (length bytes) | checksum
-
-  0xA5     - start byte: marks where a frame begins
-  type     - what the payload is (TARGETS, TELEMETRY, STOP, TEXT)
-  length   - payload size in bytes, 0..255
-  checksum - (type + length + sum of the payload bytes) & 0xFF
-
-The two messages sent on every control pass, wheel targets and telemetry,
-are packed as binary numbers with ``struct``: they are short (8 and 26 bytes
-per frame) and cost one call to pack or unpack. Rare messages (parameters,
-events) are TEXT frames with readable "key=value" pairs.
-
-A receiver that gets out of step (a lost or damaged byte) skips bytes until
-the next 0xA5 that starts a frame with a correct checksum.
+The serial link between the controller board and the Wi-Fi board: framing,
+checksums and message packing. The same file is used on both boards.
 """
 import struct
 

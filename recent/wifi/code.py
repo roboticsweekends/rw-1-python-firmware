@@ -2,25 +2,8 @@
 # SPDX-License-Identifier: MIT
 """
 RW-1 Wi-Fi board: drive the robot from a phone or a PC over Wi-Fi.
-
-Start-up:
-  0. If boot.py started a code update: run the update mode instead
-     (lib/update_self.py)
-  1. For BOOT_WINDOW_S: press the BOOT button now to forget the Wi-Fi
-     settings saved from the web page
-  2. Open the serial link to the controller board
-  3. Wi-Fi: join the home network (if set up), start the access point
-  4. Start the web server: http://192.168.4.1 on the access point
-
-One pass of the loop (it never sleeps):
-  Web       - answer one HTTP request, read the WebSocket messages
-  Link      - read the controller board's telemetry
-  Drive     - every DRIVE_PERIOD_MS: the requested v and w (or 0 after
-              CLIENT_TIMEOUT without requests) -> ramp -> kinematics ->
-              wheel targets to the controller board
-  Report    - telemetry to the WebSocket clients every 100 ms
-  Wi-Fi     - watch the home network connection
-  Update    - send new code to the controller board, when the web page asks
+Runs the web server and the kinematics and sends wheel targets to the
+controller board. Runs lib/update_self.py instead during a code update.
 """
 import time
 

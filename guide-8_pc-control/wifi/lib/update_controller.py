@@ -1,15 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Send new code files to the controller board over the serial link.
-
-The web page uploads the files to this board first (they are kept in
-memory); then send_files() restarts the controller board into its updater
-and sends them one by one (the steps are described in the controller
-board's lib/updater.py).
-
-It blocks the Wi-Fi board's loop for a few seconds; the robot doesn't
-drive meanwhile (the controller board's motors are off in its updater).
+Send uploaded code files to the controller board over the serial link.
 """
 import struct
 import time

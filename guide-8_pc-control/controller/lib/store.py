@@ -1,25 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Saved settings: the values changed from the web page and saved there.
-
+Settings saved from the web page, kept in the board's NVM as JSON.
 The same file is used on both boards.
-
-settings.toml holds the defaults. A value saved from the web page is kept in
-the board's non-volatile memory (``microcontroller.nvm``), outside the
-CIRCUITPY drive, so code.py can write it while the drive stays editable
-from the computer. On boot, lib/config.py reads settings.toml first and
-then replaces the values found here. "Reset" in the web page clears them.
-
-The saved values are grouped in sections, so different parts of the
-firmware don't overwrite each other: "params" for lib/config.py, "wifi" for
-the Wi-Fi board's network settings.
-
-NVM layout:
-
-    b"RS" | length (2 bytes, little-endian) | JSON text | checksum (1 byte)
-
-The JSON text is {"section": {"name": value, ...}, ...}.
 """
 import json
 import struct

@@ -1,16 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Controller board configuration: settings.toml defaults plus saved values.
-
-Edit ``settings.toml`` on the CIRCUITPY drive to change a default; the board
-restarts and the new value is used. Float values must be quoted there,
-because CircuitPython's ``settings.toml`` only supports strings and integers.
-
-New in guide 7: the "live" settings can also be changed from the web page
-while the robot runs, through the Wi-Fi board. A changed value is used at
-once; "Save" keeps it in the board's NVM (lib/store.py), and it then wins
-over settings.toml on the next boots until "Reset".
+Controller board settings: settings.toml defaults, live changes from the web
+page, and values saved in NVM (lib/store.py).
 """
 import os
 

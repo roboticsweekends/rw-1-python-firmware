@@ -1,49 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-The robot's web server: the web page, the JSON API and the WebSocket.
-
-The same API is used by the web page and by programs on the PC.
-
-HTTP (JSON in and out):
-
-  GET  /                    the web page (www/index.html)
-  GET  /api/info            robot name, firmware, Wi-Fi, controller link, speed limits
-  GET  /api/telemetry       newest telemetry sample
-  POST /api/drive           {"v": m/s, "w": rad/s}: same rules as the WebSocket "drive"
-  POST /api/stop            stop at once (latched until a v=0, w=0 request; from any client, as HTTP has no client name)
-  GET  /api/params          settings of both boards
-  POST /api/params          {"wifi_board": {name: value}, "controller": {name: value}}
-  POST /api/params/save     {"board": "wifi_board" | "controller" | "both"}
-  POST /api/params/reset    same; back to settings.toml
-  GET  /api/wifi            Wi-Fi state
-  POST /api/wifi/scan       networks in range (only while the robot isn't driven)
-  POST /api/wifi/test       {"ssid", "password"}: try a home network without saving it
-  POST /api/wifi/client     {"ssid", "password"}: save the home network and restart
-  POST /api/wifi/ap         {"ssid", "password"}: save the access point and restart
-  POST /api/wifi/name       {"name"}: save the robot's name and restart
-  POST /api/wifi/reconnect  try the home network again now
-  POST /api/wifi/forget     forget the saved Wi-Fi settings and restart
-
-  Code updates (the steps are in lib/updates.py):
-  GET  /api/update/status   {"mode": "normal", "pending": [names], "controller": {...}}
-  POST /api/update/file?name=lib/wheels.py&size=4093   a file for the controller
-                            board (its bytes); kept in memory until /controller
-  POST /api/update/clear    forget the uploaded files
-  POST /api/update/controller   send them to the controller board, which restarts
-  POST /api/update/wifi_board   restart this board in update mode (lib/update_self.py)
-
-WebSocket /ws (JSON text messages):
-
-  to the robot:   {"t": "drive", "v": 0.2, "w": 0.0}   send 10-20 times a second while driving
-                  {"t": "stop"}
-                  {"t": "ping"}                         keeps an idle connection open
-  from the robot: {"t": "hello", "fields": [...], ...}  once, after connecting
-                  {"t": "tel", "s": [[...], ...]}       telemetry, every 100 ms (5 samples)
-                  {"t": "state", ...}                   once a second
-                  {"t": "pong"}, {"t": "error", "text": "..."}
-
-A client that sends nothing for CLIENT_IDLE_S seconds is disconnected.
+The robot's web server: the web page, the JSON API and the WebSocket used
+by the page and by PC programs.
 """
 import errno
 import json

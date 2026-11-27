@@ -1,28 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Wi-Fi of the Wi-Fi board: the robot's own access point, always on, plus an
-optional connection to the home network (client mode).
-
-  Access point  - network RW-1-XXXX (XXXX from the board's MAC address),
-                  page at http://192.168.4.1. Always running, so the robot
-                  can be reached even when the home network has problems.
-  Client        - connects to the home network if one is set up. The robot
-                  is then also reachable at http://<ROBOT_NAME>.local and at
-                  the IP address the router gives it.
-
-The ESP32 has one radio, so the access point works on the home network's
-channel. Phones connected to the access point may reconnect once when the
-robot joins the home network.
-
-While the home network is gone, the radio keeps scanning for it, which
-disturbs the access point. So after CLIENT_GIVE_UP_S seconds without the
-home network, the robot stops looking and tries again every
-CLIENT_RETRY_S seconds, only while the robot isn't being driven.
-
-Settings come from settings.toml (ROBOT_NAME, AP_SSID, AP_PASSWORD,
-WIFI_SSID, WIFI_PASSWORD) and are replaced by the ones saved from the web
-page (lib/store.py, section "wifi").
+Wi-Fi: the robot's own access point (always on) plus an optional
+connection to the home network.
 """
 import ipaddress
 import os

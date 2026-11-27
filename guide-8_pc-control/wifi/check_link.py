@@ -1,15 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Check the serial link between the Wi-Fi board and the controller board.
-
-Run it with the robot on blocks, wheels off the ground: it spins each wheel
-slowly. Every check prints OK, or FAIL with what to look at.
-
-  1. The controller board answers and sends its settings
-  2. Telemetry arrives at the expected rate, without damaged frames
-  3. Each wheel turns forward at TEST_RPM when asked
-  4. The controller board stops the motors when the Wi-Fi board goes quiet
+Check the serial link to the controller board. Run with the wheels off the
+ground: it spins each wheel slowly and prints OK or FAIL for each check.
 """
 import busio
 

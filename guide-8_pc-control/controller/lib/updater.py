@@ -1,31 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Receive new code files from the Wi-Fi board over the serial link.
-
-code.py runs this instead of the wheel control when boot.py started an
-update (see lib/updates.py). The motors stay off the whole time.
-
-The Wi-Fi board leads, one file at a time (TEXT frames are "key=value"):
-
-  this board                       Wi-Fi board
-  cmd=updater (every 0.5 s)  ->
-                             <-    cmd=file name=lib/wheels.py size=4093 sum=...
-  cmd=file_ready             ->
-                             <-    FILE frame: number (2 bytes), checksum of the
-                                   part (4 bytes), up to 240 bytes of the file
-  FILE frame: same number    ->    (an "ack": the next part may come; a damaged
-                                   part gets no ack and is sent again)
-                                   ... until the whole file is sent
-                             <-    cmd=end
-  cmd=file_ok                ->    (size and checksum match)
-                                   ... the next file
-                             <-    cmd=commit
-  cmd=update_done            ->    the new files are in place, this board resets
-
-Any problem: cmd=update_error error=<what>. cmd=abort, or nothing from the
-Wi-Fi board for TIMEOUT_S, throws the new files away and resets with the
-old code.
+Receive new code files from the Wi-Fi board over the serial link, check
+them and put them in place. The motors stay off meanwhile.
 """
 import os
 import struct

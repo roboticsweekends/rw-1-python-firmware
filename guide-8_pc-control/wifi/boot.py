@@ -1,16 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Runs once after power-up or a reset, before code.py.
-
-Normally it does nothing: the CIRCUITPY drive stays writable from the PC.
-When code.py asked for a code update (lib/updates.py), it makes the drive
-writable for CircuitPython instead, for this one start only.
-
-Copy it to the board over USB once. It is never replaced over Wi-Fi, so
-it is always there to get the board back to normal. If something still
-goes wrong: double-press the reset button for safe mode, which skips
-boot.py and code.py.
+Runs before code.py. Makes the drive writable for CircuitPython only when
+a code update was requested (lib/updates.py). Copied over USB once; never
+replaced over Wi-Fi.
 """
 import microcontroller
 import storage

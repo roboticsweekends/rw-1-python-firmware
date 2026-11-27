@@ -1,24 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Code updates from the web page: the parts both boards share.
-
+Code updates: the update flag in NVM and the file helpers both boards share.
 The same file is used on both boards.
-
-CircuitPython can only write to its own drive after boot.py remounted it,
-and boot.py only runs after a hard reset. So an update goes like this:
-
-  1. code.py sets the update flag (one byte of microcontroller.nvm) and
-     resets the board.
-  2. boot.py sees the flag, sets it to "running" and makes the drive
-     writable for CircuitPython (the PC then sees it read-only).
-  3. code.py sees "running", clears the flag and starts the updater
-     instead of the normal program. The next reset is a normal start again.
-  4. The updater writes every new file as <name>.new and checks its size
-     and checksum. Only when all files are good, swap_in() puts them in
-     place, and the board resets.
-
-The flag lives in the last byte of the NVM; lib/store.py uses the start.
 """
 import os
 

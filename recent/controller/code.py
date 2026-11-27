@@ -1,23 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-RW-1 controller board: hold the wheel speeds the Wi-Fi board asks for.
-
-From guide 7 the robot is driven through the Wi-Fi board. It runs the
-kinematics from guide 6 and sends left and right wheel targets (RPM) over
-the serial link (lib/link.py) on every one of its passes. This board keeps
-the wheel speed control from guide 5 (lib/wheels.py) and sends back what it
-measured.
-
-One pass of the loop, every CONTROL_PERIOD_MS:
-
-  Read      - take the frames that arrived: wheel targets, stop, settings
-  Watchdog  - no targets for LINK_TIMEOUT seconds -> stop the motors
-  Control   - measure, compare and correct, drive (lib/wheels.py)
-  Report    - send one telemetry frame to the Wi-Fi board
-
-A code update from the web page restarts the board into lib/updater.py
-instead (see lib/updates.py and boot.py).
+RW-1 controller board: hold the wheel speeds the Wi-Fi board asks for over
+the serial link and send back telemetry. Stops the motors when the link goes
+quiet. Runs lib/updater.py instead during a code update.
 """
 import time
 

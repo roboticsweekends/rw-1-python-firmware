@@ -1,20 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Wi-Fi board configuration: settings.toml defaults plus saved values.
-
-Edit ``settings.toml`` on the CIRCUITPY drive to change a default; the board
-restarts and the new value is used. Float values must be quoted there,
-because CircuitPython's ``settings.toml`` only supports strings and integers.
-
-The geometry, speed limit and acceleration settings are the ones from
-guide 6: the kinematics moved to this board in guide 7. The "live" settings
-can also be changed from the web page while the robot runs. A changed value
-is used at once; "Save" keeps it in the board's NVM (lib/store.py), and it
-then wins over settings.toml on the next boots until "Reset".
-
-The controller board has its own settings (wheel speed control) in its own
-settings.toml.
+Wi-Fi board settings: settings.toml defaults, live changes from the web
+page, and values saved in NVM (lib/store.py).
 """
 import os
 

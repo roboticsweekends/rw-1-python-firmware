@@ -1,21 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Remote control requests: what the web page or a PC script asks the robot
-to do, and the safety rules around it.
-
-- Every "drive" request sets the requested v and w. A client that drives
-  keeps sending them (the web page does it 20 times a second), so the
-  requests double as a heartbeat.
-- No request for CLIENT_TIMEOUT seconds (phone locked, out of range,
-  browser tab closed): the request goes to v = w = 0 and the robot stops
-  with its normal acceleration limits.
-- "stop" stops at once and latches: drive requests are refused until the
-  client that pressed STOP asks for v = w = 0 (its joystick back in the
-  middle), so the robot can't jump off again by itself. Another client
-  (a PC script, a second phone) can't end someone else's STOP, unless that
-  client has disconnected. A STOP sent over plain HTTP (/api/stop) has no
-  client name, so any client can end it.
+Drive requests from the web page and PC clients, with the safety rules:
+client timeout and the STOP latch.
 """
 import time
 

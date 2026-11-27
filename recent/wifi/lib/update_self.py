@@ -1,21 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Update mode of the Wi-Fi board: receive its own new code files.
-
-code.py runs this instead of the normal program when boot.py started an
-update (see lib/updates.py). The board starts Wi-Fi as usual and a small
-web server; the web page, still open in the browser, then uploads the
-files. The robot doesn't drive meanwhile: the controller board stops the
-motors when the wheel targets stop coming.
-
-  GET  /api/update/status            {"mode": "update", "files": [names received]}
-  POST /api/update/file?name=...&size=...   the file's bytes; saved as <name>.new
-  POST /api/update/commit            put the files in place and restart
-  POST /api/update/abort             throw them away and restart
-
-Nothing from the page for IDLE_TIMEOUT_S: the files are thrown away and the
-board restarts with its old code.
+Update mode of the Wi-Fi board: receive its own new code files from the
+web page and put them in place.
 """
 import time
 

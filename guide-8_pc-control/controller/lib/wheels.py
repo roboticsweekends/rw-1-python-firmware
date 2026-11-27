@@ -1,18 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Robotics Weekends
 # SPDX-License-Identifier: MIT
 """
-Wheel speed control: hold each wheel at its target RPM.
-
-This is the wheel level of guide 5 and 6, unchanged: feedforward + PI per
-wheel, every control pass. make_pid() and wheel_duty() are the functions
-from guide 6's lib/drive.py. The rest of guide 6's drive.py (ramp and
-kinematics) now runs on the Wi-Fi board, which sends the wheel targets.
-
-One call to Wheels.update() is one pass:
-
-  Measure             - encoders -> wheel RPM
-  Compare and correct - feedforward + PI per wheel -> motor duty
-  Drive               - send the duty to the motors
+Wheel speed control (guide 5/6): feedforward + PI per wheel, holding each
+wheel at its target RPM.
 """
 import robot
 from pid import PID
